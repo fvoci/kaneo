@@ -134,7 +134,7 @@ export default function SubtaskAssigneePopover({
               className="w-6 h-6 rounded-full bg-muted border border-border flex items-center justify-center"
               title={t("tasks:popover.assignee.unassigned")}
             >
-              <span className="text-[10px] font-medium text-muted-foreground">
+              <span className="text-xs font-medium text-muted-foreground">
                 ?
               </span>
             </div>

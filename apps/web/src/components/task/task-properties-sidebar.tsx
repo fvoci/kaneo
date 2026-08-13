@@ -731,7 +731,7 @@ export default function TaskPropertiesSidebar({
                     >
                       <Badge
                         variant="outline"
-                        className="flex items-center gap-1 px-1.5 py-0.5 cursor-pointer hover:bg-accent/50 transition-colors text-[10px]"
+                        className="flex items-center gap-1 px-1.5 py-0.5 cursor-pointer hover:bg-accent/50 transition-colors text-xs"
                       >
                         <span
                           className="w-1.5 h-1.5 rounded-full flex-shrink-0"

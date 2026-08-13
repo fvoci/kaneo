@@ -157,7 +157,7 @@ function SearchComponent() {
                       )}
 
                       {result.status && (
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded border border-border bg-muted/55 text-muted-foreground flex-shrink-0">
+                        <span className="text-xs font-medium px-2 py-0.5 rounded border border-border bg-muted/55 text-muted-foreground flex-shrink-0">
                           {result.status}
                         </span>
                       )}

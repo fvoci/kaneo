@@ -388,7 +388,7 @@ function RouteComponent() {
                                   {roleLabel}
                                 </p>
                                 {isDefault && (
-                                  <span className="text-[10px] uppercase tracking-wide font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                                  <span className="text-xs uppercase tracking-wide font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                                     {t("settings:workspaceRoles.defaultBadge")}
                                   </span>
                                 )}

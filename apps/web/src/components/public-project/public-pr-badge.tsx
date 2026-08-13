@@ -134,7 +134,7 @@ export function PublicPRBadge({ externalLinks }: PublicPRBadgeProps) {
                   <p className="text-xs leading-tight line-clamp-2 mt-0.5">
                     {pr.title || t("tasks:pr.label")}
                   </p>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {prInfo.status}
                   </span>
                 </button>

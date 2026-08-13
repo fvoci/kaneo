@@ -64,7 +64,7 @@ export function SettingsLayout({
                   <SidebarTrigger className="-ml-1 h-6 w-6" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="flex items-center gap-2 text-[10px]">
+                  <p className="flex items-center gap-2 text-xs">
                     {t("navigation:settingsLayout.toggleSidebar")}
                     <KbdSequence
                       keys={[
