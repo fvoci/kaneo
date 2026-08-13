@@ -248,6 +248,35 @@ input:-webkit-autofill:active {
   --code-highlight: --alpha(var(--color-white) / 4%);
 }
 
+/* Hangul syllable blocks carry more strokes per glyph than Latin letters, so
+   the Latin scale reads cramped in Korean. Every step moves up about 1.5px.
+
+   Only the text tokens move. Changing the root font size would scale every
+   rem-based dimension with it, including layout measurements like the gantt
+   day columns.
+
+   `use-locale` keeps the lang attribute in sync, and the attribute selector
+   outranks the `:root` the theme defines these on, so the values swap on
+   language change with no extra wiring. */
+html[lang="ko-KR"] {
+  --text-xs: 0.84rem;
+  --text-sm: 0.97rem;
+  --text-base: 1.09rem;
+  --text-lg: 1.22rem;
+  --text-xl: 1.34rem;
+  --text-2xl: 1.59rem;
+  --text-3xl: 1.97rem;
+  --text-4xl: 2.34rem;
+
+  /* Reading sizes also get a little more leading than the Latin ratios give.
+     `--text-xs--line-height` is left alone: xs is badge and chip chrome, and
+     the dense rows pinned to `text-xs/tight` read `--leading-tight` instead,
+     so their line box stays proportional either way. */
+  --text-sm--line-height: 1.55;
+  --text-base--line-height: 1.6;
+  --text-lg--line-height: 1.6;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
