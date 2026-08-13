@@ -217,7 +217,7 @@ function MembersTable({ workspaceId, invitations, users }: Props) {
                         src={member.user.image ?? ""}
                         alt={member.user.name ?? ""}
                       />
-                      <AvatarFallback className="bg-transparent text-[11px] font-medium">
+                      <AvatarFallback className="bg-transparent text-xs font-medium">
                         {getInitials(member.user.name)}
                       </AvatarFallback>
                     </Avatar>

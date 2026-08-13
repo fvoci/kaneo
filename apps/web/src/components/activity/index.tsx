@@ -152,7 +152,7 @@ function ActorAvatar({
   return (
     <Avatar className="size-6">
       <AvatarImage src={user?.user?.image ?? ""} alt={fallbackName} />
-      <AvatarFallback className="bg-muted text-[11px] font-medium">
+      <AvatarFallback className="bg-muted text-xs font-medium">
         {getInitials(fallbackName)}
       </AvatarFallback>
     </Avatar>
