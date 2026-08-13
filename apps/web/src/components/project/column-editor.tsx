@@ -322,7 +322,7 @@ export default function ColumnEditor({ projectId }: ColumnEditorProps) {
                   })}
                   className="scale-75"
                 />
-                <span className="text-[11px] text-muted-foreground w-8">
+                <span className="text-xs text-muted-foreground w-8">
                   {col.isFinal
                     ? t("settings:columnEditor.on")
                     : t("settings:columnEditor.off")}

@@ -341,7 +341,7 @@ const NotificationDropdown = forwardRef<NotificationDropdownRef>(
                             >
                               {getNotificationTitle(notification, t)}
                             </span>
-                            <span className="ml-auto shrink-0 text-[11px] text-muted-foreground/70">
+                            <span className="ml-auto shrink-0 text-xs text-muted-foreground/70">
                               {formatRelativeTime(notification.createdAt)}
                             </span>
                             {!notification.isRead && (

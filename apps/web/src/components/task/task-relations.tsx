@@ -298,7 +298,7 @@ export default function TaskRelations({
         <CollapsibleContent>
           {Object.entries(groupedRelations).map(([type, items]) => (
             <div key={type} className="mt-1.5">
-              <span className="text-[11px] text-muted-foreground/70 px-2">
+              <span className="text-xs text-muted-foreground/70 px-2">
                 {t(`tasks:relations.types.${type}`, {
                   defaultValue: type.replace(/_/g, " "),
                 })}

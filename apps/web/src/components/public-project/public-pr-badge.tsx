@@ -125,7 +125,7 @@ export function PublicPRBadge({ externalLinks }: PublicPRBadgeProps) {
                   onClick={() => window.open(pr.url, "_blank")}
                   className="w-full px-2 py-1.5 text-left hover:bg-muted/50 rounded transition-colors"
                 >
-                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     {prInfo.icon}
                     <span>
                       {repoName}#{pr.externalId}
