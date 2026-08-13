@@ -248,17 +248,44 @@ input:-webkit-autofill:active {
   --code-highlight: --alpha(var(--color-white) / 4%);
 }
 
-/* Hangul syllable blocks carry more strokes per glyph than Latin letters, so
-   the Latin scale reads cramped in Korean. Every step moves up about 1.5px.
-
-   Only the text tokens move. Changing the root font size would scale every
-   rem-based dimension with it, including layout measurements like the gantt
-   day columns.
-
-   `use-locale` keeps the lang attribute in sync, and the attribute selector
-   outranks the `:root` the theme defines these on, so the values swap on
-   language change with no extra wiring. */
+/* Korean overrides for the type tokens. `use-locale` keeps the lang attribute
+   in sync, and the attribute selector outranks the `:root` the theme defines
+   these on, so the values swap on language change with no extra wiring. */
 html[lang="ko-KR"] {
+  /* The bundled Cal Sans faces are Latin-only subsets, so Hangul silently
+     fell through to whatever the OS picked, and Latin and Hangul in the same
+     string came out in two different typefaces. Naming the Korean faces makes
+     that deterministic. No files are bundled yet; this is the system stack. */
+  --font-sans:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Apple SD Gothic Neo",
+    "Pretendard Variable",
+    Pretendard,
+    "Noto Sans KR",
+    "Noto Sans CJK KR",
+    "Malgun Gothic",
+    Roboto,
+    "Segoe UI",
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Segoe UI Symbol",
+    sans-serif;
+
+  /* Headings resolve to the same stack rather than repeating it. `:root` has
+     them on "Cal Sans Heading" first, which carries no Hangul, so headings
+     would otherwise render Korean in a different face than the body. */
+  --font-heading: var(--font-sans);
+
+  /* --font-mono is deliberately left on Paper Mono until a Korean mono face
+     is bundled. */
+
+  /* Hangul syllable blocks carry more strokes per glyph than Latin letters, so
+     the Latin scale reads cramped in Korean. Every step moves up about 1.5px.
+
+     Only the text tokens move. Changing the root font size would scale every
+     rem-based dimension with it, including layout measurements like the gantt
+     day columns. */
   --text-xs: 0.84rem;
   --text-sm: 0.97rem;
   --text-base: 1.09rem;
