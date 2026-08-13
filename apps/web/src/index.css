@@ -302,6 +302,20 @@ html[lang="ko-KR"] {
   --text-sm--line-height: 1.55;
   --text-base--line-height: 1.6;
   --text-lg--line-height: 1.6;
+
+  /* Korean wraps between syllables by default, which splits words down the
+     middle. keep-all moves the break opportunities out to the spaces between
+     어절. Both properties inherit, so elements that declare their own value —
+     the break-all on API keys and webhook URLs, the break-word on editor embed
+     links — keep it; a declaration always beats an inherited value.
+
+     break-word is the safety net keep-all needs: a long run with no spaces has
+     nowhere to break and would otherwise overflow narrow containers like the
+     w-72 board card. It only steps in when a word cannot fit a line of its own,
+     so it does not undo keep-all. anywhere would also work but shrinks
+     min-content, which can move flex and grid tracks around. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 @layer base {
