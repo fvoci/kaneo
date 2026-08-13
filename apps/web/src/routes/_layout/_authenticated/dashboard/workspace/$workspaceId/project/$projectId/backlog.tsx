@@ -553,7 +553,7 @@ function RouteComponent() {
                       </>
                     )}
                     <DropdownMenuGroup>
-                      <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+                      <DropdownMenuLabel className="text-xs uppercase tracking-wide">
                         {t("tasks:priority.label")}
                       </DropdownMenuLabel>
                     </DropdownMenuGroup>
@@ -577,7 +577,7 @@ function RouteComponent() {
 
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
-                      <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+                      <DropdownMenuLabel className="text-xs uppercase tracking-wide">
                         {t("tasks:assignee.label")}
                       </DropdownMenuLabel>
                     </DropdownMenuGroup>
@@ -608,7 +608,7 @@ function RouteComponent() {
 
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
-                      <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+                      <DropdownMenuLabel className="text-xs uppercase tracking-wide">
                         {t("tasks:dueDate.label")}
                       </DropdownMenuLabel>
                     </DropdownMenuGroup>
@@ -640,7 +640,7 @@ function RouteComponent() {
 
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
-                      <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+                      <DropdownMenuLabel className="text-xs uppercase tracking-wide">
                         {t("tasks:labels.label")}
                       </DropdownMenuLabel>
                     </DropdownMenuGroup>

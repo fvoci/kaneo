@@ -84,7 +84,7 @@ export default function SortControl({ sort, onSortChange }: SortControlProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-48" align="start">
           <DropdownMenuGroup>
-            <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+            <DropdownMenuLabel className="text-xs uppercase tracking-wide">
               {t("tasks:sort.by")}
             </DropdownMenuLabel>
           </DropdownMenuGroup>
@@ -104,7 +104,7 @@ export default function SortControl({ sort, onSortChange }: SortControlProps) {
             <>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+                <DropdownMenuLabel className="text-xs uppercase tracking-wide">
                   {t("tasks:sort.direction")}
                 </DropdownMenuLabel>
               </DropdownMenuGroup>

@@ -270,7 +270,7 @@ export default function BoardToolbar({
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="start">
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+                  <DropdownMenuLabel className="text-xs uppercase tracking-wide">
                     {t("tasks:boardFilters.filterBy")}
                   </DropdownMenuLabel>
                 </DropdownMenuGroup>

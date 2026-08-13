@@ -51,7 +51,7 @@ export default function TaskCrumbSelect({
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-80" align="start">
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+          <DropdownMenuLabel className="text-xs uppercase tracking-wide">
             {t("navigation:search.groups.task")}
           </DropdownMenuLabel>
         </DropdownMenuGroup>
