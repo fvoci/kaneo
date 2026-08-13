@@ -205,7 +205,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
             }}
           >
             {showTaskNumbers && (
-              <div className="mb-2 text-[10px] font-mono text-muted-foreground/90">
+              <div className="mb-2 text-xs/tight font-mono text-muted-foreground/90">
                 {project?.slug}-{task.number}
               </div>
             )}
@@ -227,7 +227,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
                     className="flex h-5 w-5 items-center justify-center rounded-full border border-border bg-muted"
                     title={t("tasks:assignee.unassigned")}
                   >
-                    <span className="text-[10px] font-medium text-muted-foreground">
+                    <span className="text-xs/tight font-medium text-muted-foreground">
                       ?
                     </span>
                   </div>
@@ -258,14 +258,14 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
 
             <div className="flex items-center gap-1.5">
               {showPriority && (
-                <span className="inline-flex items-center gap-1 rounded border border-border/70 bg-muted/55 px-2 py-1 text-[10px] font-medium text-muted-foreground">
+                <span className="inline-flex items-center gap-1 rounded border border-border/70 bg-muted/55 px-2 py-1 text-xs/tight font-medium text-muted-foreground">
                   {getPriorityIcon(task.priority ?? "")}
                 </span>
               )}
 
               {showDueDates && task.dueDate && (
                 <div
-                  className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
+                  className={`flex items-center gap-1 text-xs/tight px-2 py-1 rounded ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
                 >
                   {getDueDateStatus(task.dueDate, taskIsCompleted) ===
                     "overdue" && <CalendarX className="w-3 h-3" />}
@@ -288,7 +288,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
                         e.stopPropagation();
                         window.open(pullRequests[0].url, "_blank");
                       }}
-                      className="inline-flex items-center gap-1.5 rounded border border-border/70 bg-muted/55 px-2 py-1 text-[10px] font-medium text-muted-foreground"
+                      className="inline-flex items-center gap-1.5 rounded border border-border/70 bg-muted/55 px-2 py-1 text-xs/tight font-medium text-muted-foreground"
                     >
                       {getPRInfo(pullRequests[0]).icon}
                       <span>#{pullRequests[0].externalId}</span>
@@ -335,7 +335,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
                         <button
                           type="button"
                           onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1.5 rounded border border-border/70 bg-muted/55 px-2 py-1 text-[10px] font-medium text-muted-foreground"
+                          className="inline-flex items-center gap-1.5 rounded border border-border/70 bg-muted/55 px-2 py-1 text-xs/tight font-medium text-muted-foreground"
                         >
                           <GitPullRequest className={`h-3 w-3 ${iconColor}`} />
                           <span>
@@ -367,7 +367,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
                                 onClick={() => window.open(pr.url, "_blank")}
                                 className="w-full px-2 py-1.5 text-left hover:bg-muted/50 rounded transition-colors"
                               >
-                                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                   {prInfo.icon}
                                   <span>
                                     {repoName}#{pr.externalId}
@@ -376,7 +376,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
                                 <p className="text-xs leading-tight line-clamp-2 mt-0.5">
                                   {pr.title || t("tasks:pr.label")}
                                 </p>
-                                <span className="text-[10px] text-muted-foreground">
+                                <span className="text-xs/tight text-muted-foreground">
                                   {prInfo.status}
                                 </span>
                               </button>

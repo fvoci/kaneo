@@ -426,7 +426,7 @@ function ListView({ project, disableDragDrop = false }: ListViewProps) {
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-mono text-muted-foreground">
+                  <span className="text-xs font-mono text-muted-foreground">
                     {project?.slug}-{activeTask.number}
                   </span>
                   <span className="text-xs text-foreground truncate">

@@ -248,7 +248,7 @@ function RouteComponent() {
                       width: isMobile ? `${taskColumnWidthRem}rem` : undefined,
                     }}
                   >
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       {t("tasks:gantt.taskHeader")}
                     </p>
                   </div>
@@ -273,7 +273,7 @@ function RouteComponent() {
                           isWeekend(day) && "bg-muted/25",
                         )}
                       >
-                        <div className="h-4 text-[10px] font-medium text-muted-foreground">
+                        <div className="h-4 text-xs/tight font-medium text-muted-foreground">
                           {showMonth ? format(day, "MMM") : ""}
                         </div>
                         <div
@@ -344,17 +344,17 @@ function RouteComponent() {
                               }
                             >
                               <div className="flex w-full items-center gap-1.5">
-                                <span className="max-w-[7rem] truncate rounded-full bg-secondary px-1.5 py-px text-[10px] font-medium uppercase tracking-wide text-secondary-foreground sm:max-w-none">
+                                <span className="max-w-[7rem] truncate rounded-full bg-secondary px-1.5 py-px text-xs/tight font-medium uppercase tracking-wide text-secondary-foreground sm:max-w-none">
                                   {getStatusLabel(task.status)}
                                 </span>
-                                <span className="truncate text-[10px] text-muted-foreground">
+                                <span className="truncate text-xs/tight text-muted-foreground">
                                   {project?.slug}-{task.number}
                                 </span>
                               </div>
                               <p className="w-full line-clamp-1 text-xs font-medium leading-tight text-foreground">
                                 {task.title}
                               </p>
-                              <p className="w-full truncate text-[11px] leading-tight text-muted-foreground">
+                              <p className="w-full truncate text-xs leading-tight text-muted-foreground">
                                 {format(task.scheduleStart, "MMM d")} -{" "}
                                 {format(task.scheduleEnd, "MMM d")}
                                 {task.assigneeName

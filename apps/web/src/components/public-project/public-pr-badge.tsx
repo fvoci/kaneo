@@ -58,7 +58,7 @@ export function PublicPRBadge({ externalLinks }: PublicPRBadgeProps) {
               e.stopPropagation();
               window.open(pullRequests[0].url, "_blank");
             }}
-            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-[10px] font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-xs/tight font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
           >
             {getPRInfo(pullRequests[0]).icon}
             <span>#{pullRequests[0].externalId}</span>
@@ -102,7 +102,7 @@ export function PublicPRBadge({ externalLinks }: PublicPRBadgeProps) {
           <button
             type="button"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-[10px] font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-xs/tight font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
           >
             <GitPullRequest className={`h-3 w-3 ${iconColor}`} />
             <span>{t("tasks:pr.count", { count: pullRequests.length })}</span>
