@@ -99,6 +99,37 @@ export const documentBacklinkSchema = v.object({
 
 export const documentBacklinkListSchema = v.array(documentBacklinkSchema);
 
+/** A task a document references, as shown in its reference section. */
+export const documentTaskSchema = v.object({
+  id: v.string(),
+  title: v.string(),
+  number: v.nullable(v.number()),
+  status: v.string(),
+  priority: v.nullable(v.string()),
+  projectId: v.string(),
+  projectSlug: v.string(),
+  assigneeName: v.nullable(v.string()),
+  linkedAt: v.date(),
+});
+
+export const documentTaskListSchema = v.array(documentTaskSchema);
+
+export const documentTaskLinkSchema = v.object({
+  id: v.string(),
+  documentId: v.string(),
+  taskId: v.string(),
+  createdAt: v.date(),
+});
+
+export const linkDocumentTaskSchema = v.object({
+  taskId: v.pipe(v.string(), v.minLength(1)),
+});
+
+export const documentTaskLinkParamSchema = v.object({
+  id: v.string(),
+  taskId: v.string(),
+});
+
 export const documentIdParamSchema = v.object({ id: v.string() });
 
 export const documentTaskIdParamSchema = v.object({ taskId: v.string() });

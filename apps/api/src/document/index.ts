@@ -5,8 +5,11 @@ import { requireDocumentAccess } from "../utils/require-document-access";
 import createDocument from "./controllers/create-document";
 import deleteDocument from "./controllers/delete-document";
 import getDocument from "./controllers/get-document";
+import getDocumentTasks from "./controllers/get-document-tasks";
 import getDocuments from "./controllers/get-documents";
 import getTaskDocuments from "./controllers/get-task-documents";
+import linkDocumentTask from "./controllers/link-document-task";
+import unlinkDocumentTask from "./controllers/unlink-document-task";
 import updateDocument from "./controllers/update-document";
 import {
   createDocumentSchema,
@@ -16,7 +19,11 @@ import {
   documentProjectIdParamSchema,
   documentSchema,
   documentTaskIdParamSchema,
+  documentTaskLinkParamSchema,
+  documentTaskLinkSchema,
+  documentTaskListSchema,
   documentVersionConflictSchema,
+  linkDocumentTaskSchema,
   updateDocumentSchema,
 } from "./schemas";
 
@@ -117,6 +124,89 @@ const document = new Hono<{
       const { taskId } = c.req.valid("param");
       const documents = await getTaskDocuments(taskId);
       return c.json(documents);
+    },
+  )
+  .get(
+    "/:id/tasks",
+    describeRoute({
+      operationId: "listDocumentTasks",
+      tags: ["Documents"],
+      description: "List the tasks a document references",
+      responses: {
+        200: {
+          description: "Referenced tasks, most recently linked first",
+          content: {
+            "application/json": { schema: resolver(documentTaskListSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", documentIdParamSchema),
+    requireDocumentAccess.fromDocumentId("read"),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const tasks = await getDocumentTasks(id);
+      return c.json(tasks);
+    },
+  )
+  .post(
+    "/:id/tasks",
+    describeRoute({
+      operationId: "linkDocumentTask",
+      tags: ["Documents"],
+      description: "Reference a task from a document",
+      responses: {
+        200: {
+          description: "Link created",
+          content: {
+            "application/json": { schema: resolver(documentTaskLinkSchema) },
+          },
+        },
+        409: { description: "The link already exists" },
+      },
+    }),
+    validator("param", documentIdParamSchema),
+    validator("json", linkDocumentTaskSchema),
+    requireDocumentAccess.fromDocumentId("update"),
+    async (c) => {
+      const userId = requireUserId(c);
+      const { id } = c.req.valid("param");
+      const { taskId } = c.req.valid("json");
+      const link = await linkDocumentTask({
+        documentId: id,
+        taskId,
+        workspaceId: c.get("workspaceId"),
+        currentUserId: userId,
+      });
+      return c.json(link);
+    },
+  )
+  .delete(
+    "/:id/tasks/:taskId",
+    describeRoute({
+      operationId: "unlinkDocumentTask",
+      tags: ["Documents"],
+      description: "Stop referencing a task from a document",
+      responses: {
+        200: {
+          description: "Link removed",
+          content: {
+            "application/json": { schema: resolver(documentTaskLinkSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", documentTaskLinkParamSchema),
+    requireDocumentAccess.fromDocumentId("update"),
+    async (c) => {
+      const userId = requireUserId(c);
+      const { id, taskId } = c.req.valid("param");
+      const removed = await unlinkDocumentTask({
+        documentId: id,
+        taskId,
+        currentUserId: userId,
+      });
+      return c.json(removed);
     },
   )
   .get(
