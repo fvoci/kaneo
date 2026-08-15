@@ -61,6 +61,20 @@ async function workspaceIdForDocument(
   return row?.workspaceId ?? null;
 }
 
+async function workspaceIdForTask(taskId: string): Promise<string | null> {
+  const [row] = await db
+    .select({ workspaceId: schema.projectTable.workspaceId })
+    .from(schema.taskTable)
+    .innerJoin(
+      schema.projectTable,
+      eq(schema.taskTable.projectId, schema.projectTable.id),
+    )
+    .where(eq(schema.taskTable.id, taskId))
+    .limit(1);
+
+  return row?.workspaceId ?? null;
+}
+
 async function workspaceIdForProject(
   projectId: string,
 ): Promise<string | null> {
@@ -130,5 +144,14 @@ export const requireDocumentAccess = {
       action,
       workspaceIdForProject,
       "Project not found",
+    ),
+
+  /** Resolves the workspace through task -> project, for backlink reads. */
+  fromTaskId: (action: DocumentAction, idKey = "taskId") =>
+    documentAccessMiddleware(
+      idKey,
+      action,
+      workspaceIdForTask,
+      "Task not found",
     ),
 };

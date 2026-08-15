@@ -37,6 +37,10 @@ function createDocument(
   });
 }
 
+function listTaskDocuments(app: App, taskId: string) {
+  return app.request(`/api/document/task/${taskId}`);
+}
+
 async function seedTask(projectId: string, number: number, title = "Task") {
   const [task] = await db
     .insert(schema.taskTable)
@@ -396,6 +400,147 @@ describe("API integration: document task links", () => {
           ),
         );
       expect(stored?.id).toBe(created.id);
+    });
+  });
+
+  describe("backlinks", () => {
+    it("lists the documents that reference a task", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const task = await seedTask(project.id, 1);
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const first = await (
+        await createDocument(app, project.id, {
+          title: "프로토콜",
+          content: issueLink(task.id),
+          taskIds: [task.id],
+        })
+      ).json();
+      await createDocument(app, project.id, {
+        title: "링크 없는 문서",
+        content: "본문만",
+      });
+
+      const response = await listTaskDocuments(app, task.id);
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body).toHaveLength(1);
+      expect(body[0].id).toBe(first.id);
+      expect(body[0].title).toBe("프로토콜");
+    });
+
+    it("returns an empty list for a task nothing references", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const task = await seedTask(project.id, 1);
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      expect(await (await listTaskDocuments(app, task.id)).json()).toEqual([]);
+    });
+
+    it("drops a document from the list once the link is removed", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const task = await seedTask(project.id, 1);
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const created = await (
+        await createDocument(app, project.id, {
+          content: issueLink(task.id),
+          taskIds: [task.id],
+        })
+      ).json();
+      expect(await (await listTaskDocuments(app, task.id)).json()).toHaveLength(
+        1,
+      );
+
+      await updateDocument(app, created.id, {
+        content: "링크 제거",
+        version: created.version,
+        taskIds: [],
+      });
+
+      expect(await (await listTaskDocuments(app, task.id)).json()).toEqual([]);
+    });
+
+    it("hides archived documents from the list", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const task = await seedTask(project.id, 1);
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const created = await (
+        await createDocument(app, project.id, {
+          content: issueLink(task.id),
+          taskIds: [task.id],
+        })
+      ).json();
+
+      await app.request(`/api/document/${created.id}`, { method: "DELETE" });
+
+      expect(await (await listTaskDocuments(app, task.id)).json()).toEqual([]);
+    });
+
+    it("blocks reading the backlinks of another workspace's task", async () => {
+      const victim = await createWorkspaceMember({ role: "admin" });
+      const attacker = await createWorkspaceMember({ role: "admin" });
+      const { project } = await createProjectFixture({
+        workspaceId: victim.workspace.id,
+      });
+      const task = await seedTask(project.id, 1);
+
+      mockAuthenticatedSession(victim.user);
+      const victimApp = createApp().app;
+      const created = await (
+        await createDocument(victimApp, project.id, {
+          title: "기밀 문서",
+          content: issueLink(task.id),
+          taskIds: [task.id],
+        })
+      ).json();
+      expect(created.id).toBeTruthy();
+
+      mockAuthenticatedSession(attacker.user);
+      const { app } = createApp();
+      const response = await listTaskDocuments(app, task.id);
+
+      expect(response.status).toBe(403);
+      expect(await response.text()).not.toContain("기밀 문서");
+    });
+
+    it("returns 404 for a task that does not exist", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      await createProjectFixture({ workspaceId: member.workspace.id });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      expect((await listTaskDocuments(app, "missing-task")).status).toBe(404);
+    });
+
+    it("allows a viewer to read backlinks", async () => {
+      const member = await createWorkspaceMember({ role: "viewer" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const task = await seedTask(project.id, 1);
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      expect((await listTaskDocuments(app, task.id)).status).toBe(200);
     });
   });
 });

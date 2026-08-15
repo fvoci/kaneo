@@ -6,13 +6,16 @@ import createDocument from "./controllers/create-document";
 import deleteDocument from "./controllers/delete-document";
 import getDocument from "./controllers/get-document";
 import getDocuments from "./controllers/get-documents";
+import getTaskDocuments from "./controllers/get-task-documents";
 import updateDocument from "./controllers/update-document";
 import {
   createDocumentSchema,
+  documentBacklinkListSchema,
   documentIdParamSchema,
   documentListSchema,
   documentProjectIdParamSchema,
   documentSchema,
+  documentTaskIdParamSchema,
   documentVersionConflictSchema,
   updateDocumentSchema,
 } from "./schemas";
@@ -87,6 +90,33 @@ const document = new Hono<{
         workspaceId: c.get("workspaceId"),
       });
       return c.json(created);
+    },
+  )
+  // Registered before "/:id" so the literal segment wins; the reverse order
+  // would swallow this as a document whose id is "task".
+  .get(
+    "/task/:taskId",
+    describeRoute({
+      operationId: "listTaskDocuments",
+      tags: ["Documents"],
+      description: "List the documents whose body references a task",
+      responses: {
+        200: {
+          description: "Documents ordered by most recently updated",
+          content: {
+            "application/json": {
+              schema: resolver(documentBacklinkListSchema),
+            },
+          },
+        },
+      },
+    }),
+    validator("param", documentTaskIdParamSchema),
+    requireDocumentAccess.fromTaskId("read"),
+    async (c) => {
+      const { taskId } = c.req.valid("param");
+      const documents = await getTaskDocuments(taskId);
+      return c.json(documents);
     },
   )
   .get(

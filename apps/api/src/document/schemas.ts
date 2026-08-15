@@ -88,7 +88,20 @@ export const documentVersionConflictSchema = v.object({
   currentVersion: v.number(),
 });
 
+/** A document that references a task, as shown in the task's backlink panel. */
+export const documentBacklinkSchema = v.object({
+  id: v.string(),
+  projectId: v.string(),
+  title: v.string(),
+  updatedAt: v.date(),
+  linkedAt: v.date(),
+});
+
+export const documentBacklinkListSchema = v.array(documentBacklinkSchema);
+
 export const documentIdParamSchema = v.object({ id: v.string() });
+
+export const documentTaskIdParamSchema = v.object({ taskId: v.string() });
 
 export const documentProjectIdParamSchema = v.object({
   projectId: v.string(),
