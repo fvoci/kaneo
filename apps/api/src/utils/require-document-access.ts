@@ -5,20 +5,14 @@ import db, { schema } from "../database";
 import { hasWorkspacePermission } from "./require-workspace-permission";
 import { validateWorkspaceAccess } from "./validate-workspace-access";
 
-export type DocumentAction = "read" | "create" | "update" | "delete";
-
 /**
  * Documents borrow the task permission vocabulary so `@kaneo/permissions`
  * stays untouched while the feature is workspace-scoped. When per-document
- * ACLs land, this map and the lookups below are the only things that change —
- * every document route already funnels through this file.
+ * ACLs land, the permission lookup below and the workspace lookups are the
+ * only things that change — every document route already funnels through this
+ * file.
  */
-const ACTION_TO_TASK_PERMISSION: Record<DocumentAction, string[]> = {
-  read: ["read"],
-  create: ["create"],
-  update: ["update"],
-  delete: ["delete"],
-};
+export type DocumentAction = "read" | "create" | "update" | "delete";
 
 async function readJsonObjectBody(
   c: Context,
@@ -116,9 +110,7 @@ function documentAccessMiddleware(
 
     c.set("workspaceId", workspaceId);
 
-    const granted = await hasWorkspacePermission(c, {
-      task: ACTION_TO_TASK_PERMISSION[action],
-    });
+    const granted = await hasWorkspacePermission(c, { task: [action] });
     if (!granted) {
       throw new HTTPException(403, { message: "Insufficient permissions" });
     }
