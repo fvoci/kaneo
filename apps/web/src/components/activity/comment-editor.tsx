@@ -600,6 +600,13 @@ export default function CommentEditor({
     [canUploadFiles, openImagePicker, t],
   );
 
+  // KaTeX keeps 1.2MB of fonts behind its stylesheet. It loads here rather
+  // than in the app shell so screens without an editor never pay for it; the
+  // browser then fetches a font file only once a formula needs that glyph.
+  useEffect(() => {
+    void import("katex/dist/katex.min.css");
+  }, []);
+
   useEffect(() => {
     let mounted = true;
 

@@ -243,6 +243,40 @@ describe("extension sets are well formed", () => {
     expect(documentNames).not.toContain("attachmentCard");
   });
 
+  it("registers block maths on both surfaces and inline maths on neither", () => {
+    for (const set of [createEditorExtensions(), createDocumentExtensions()]) {
+      expect(names(set)).toContain("blockMath");
+      expect(names(set)).not.toContain("inlineMath");
+    }
+  });
+
+  it("keeps a comment's formula after a document has been opened", () => {
+    // Markdown tokenizers register globally, so the moment an editor carrying
+    // blockMath exists, every later editor parses `$$...$$` into that node. A
+    // surface whose schema lacked it dropped the node and the text vanished —
+    // opening a document and then editing a comment deleted the formula. Both
+    // surfaces carry the node so there is nothing to drop.
+    roundTripWith(createDocumentExtensions(), "$$\nE=mc^2\n$$", 1);
+
+    const inComment = roundTripWith(
+      createEditorExtensions(),
+      "$$\nE=mc^2\n$$",
+      4,
+    );
+    expect(inComment).toBe("$$\nE=mc^2\n$$");
+  });
+
+  it("keeps ordinary comments untouched once maths is registered", () => {
+    roundTripWith(createDocumentExtensions(), "$$\nE=mc^2\n$$", 1);
+
+    expect(roundTripWith(createEditorExtensions(), "평범한 코멘트", 4)).toBe(
+      "평범한 코멘트",
+    );
+    expect(
+      roundTripWith(createEditorExtensions(), "가격은 $100, 할인가 $80", 4),
+    ).toBe("가격은 $100, 할인가 $80");
+  });
+
   it("keeps link configured on both surfaces", () => {
     for (const html of [
       htmlFor(createEditorExtensions(), "[a](https://example.com)"),
@@ -346,6 +380,38 @@ describe("document surface", () => {
     // stores the same text a document would.
     const md = "```mermaid\ngraph TD;\n  A --> B;\n```";
     expect(roundTripWith(createEditorExtensions(), md, 4)).toBe(md.trim());
+  });
+
+  it("keeps block formulas through repeated saves", () => {
+    expectDocLossless("$$\n\\frac{a}{b}\n$$");
+    expectDocLossless("$$\nE=mc^2\n$$");
+    expectDocLossless("$$\n\\alpha_1^2 + \\beta^{n-1}\n$$");
+  });
+
+  it("renders a block formula as maths, not as text", () => {
+    const html = htmlFor(createDocumentExtensions(), "$$\n\\frac{a}{b}\n$$");
+    expect(html).toContain('data-type="block-math"');
+  });
+
+  it("leaves dollars in prose alone", () => {
+    // The reason maths is block-only. The inline `$...$` tokenizer reads any
+    // two dollars on a line as a formula, so a price list or a shell variable
+    // would parse as maths and come back without the space between them.
+    // Block `$$` cannot reach into a sentence, so these stay text.
+    expectDocLossless("가격은 $100, 할인가 $80");
+    expectDocLossless("환경변수 `$PATH` 를 확인");
+    expectDocLossless("표본 크기 $n$ 개");
+    expectDocLossless("$50 에서 $70 으로 올랐다");
+    expectDocLossless("쉘에서 $HOME 과 $USER 를 쓴다");
+  });
+
+  it("does not parse prose dollars into a maths node", () => {
+    // Stronger than the round trip: text can survive a trip and still have
+    // become the wrong kind of node on the way.
+    const html = htmlFor(createDocumentExtensions(), "가격은 $100, 할인가 $80");
+    expect(html).not.toContain("math");
+    expect(html).toContain("$100");
+    expect(html).toContain("$80");
   });
 
   it("keeps blockquotes, lists and checklists", () => {

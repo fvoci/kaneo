@@ -1,5 +1,6 @@
 import type { AnyExtension } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
+import { BlockMath } from "@tiptap/extension-mathematics";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Table } from "@tiptap/extension-table";
 import TableCell from "@tiptap/extension-table-cell";
@@ -58,6 +59,14 @@ export type EditorExtensionOptions = {
  * Markdown must build its editor from here: the set of extensions decides
  * which Markdown survives a parse/serialize round trip, so a second, drifting
  * list would silently change what gets persisted.
+ *
+ * Maths is block-only, on purpose. The inline `$...$` tokenizer reads any two
+ * dollars on a line as a formula, so "가격은 $100, 할인가 $80" parses as prose,
+ * a formula, then prose — turning text nobody meant as maths into a rendered
+ * equation and dropping a space on the way back out. Block `$$...$$` cannot
+ * reach into a sentence, so a stray dollar stays a dollar. Inline maths can
+ * follow if that tokenizer can be tightened; until then the cost would fall on
+ * documents that never asked for maths at all.
  */
 export function createEditorExtensions({
   readOnly = false,
@@ -96,6 +105,7 @@ export function createEditorExtensions({
     MermaidBlock.configure({
       errorKey: "activity:comment.editor.mermaid.renderFailed",
     }),
+    BlockMath,
     EmbedBlock,
     AttachmentCard,
     KaneoIssueLink,
@@ -139,6 +149,12 @@ export function createEditorExtensions({
  * beside a fenced code block whose language is `mermaid` — so it adds nothing
  * to what gets stored. Leaving it out only meant a document could hold a
  * mermaid fence that never rendered.
+ *
+ * BlockMath is on both sets for the same reason. Markdown tokenizers register
+ * globally, so once any editor carrying it exists, every later editor parses
+ * `$$...$$` into a blockMath node — and a surface whose schema lacks that node
+ * drops it, deleting the text. Registering it only here would mean a comment
+ * written after a document was opened lost its formula.
  */
 export function createDocumentExtensions({
   readOnly = false,
@@ -175,6 +191,7 @@ export function createDocumentExtensions({
     MermaidBlock.configure({
       errorKey: "documents:mermaid.renderFailed",
     }),
+    BlockMath,
     EmbedBlock,
     KaneoIssueLink,
     KaneoMention,
