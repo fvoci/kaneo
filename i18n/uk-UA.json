@@ -2168,6 +2168,9 @@
 		"sourceMode": {
 			"enter": "Edit Markdown source",
 			"exit": "Back to rich text"
+		},
+		"backlinks": {
+			"title": "Referenced by"
 		}
 	}
 }

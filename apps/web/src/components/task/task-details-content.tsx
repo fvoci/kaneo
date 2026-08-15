@@ -13,6 +13,7 @@ import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetTask from "@/hooks/queries/task/use-get-task";
 import useGetTaskRelations from "@/hooks/queries/task-relation/use-get-task-relations";
 import type { ExternalLink } from "@/types/external-link";
+import TaskBacklinks from "./task-backlinks";
 import TaskDescription from "./task-description";
 import TaskRelations from "./task-relations";
 import TaskSubtasks from "./task-subtasks";
@@ -104,6 +105,11 @@ export default function TaskDetailsContent({
           workspaceId={workspaceId}
         />
       </div>
+      {taskId && (
+        <div className="mt-2">
+          <TaskBacklinks taskId={taskId} workspaceId={workspaceId} />
+        </div>
+      )}
       <span className="text-sm font-medium text-muted-foreground h-[1px] bg-border w-full block shrink-0" />
       <div className="flex flex-col gap-4">
         <h1 className="text-md font-semibold">{t("tasks:detail.activity")}</h1>

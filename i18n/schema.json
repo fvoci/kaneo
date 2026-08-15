@@ -8496,6 +8496,16 @@
 						}
 					},
 					"required": ["enter", "exit"]
+				},
+				"backlinks": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						}
+					},
+					"required": ["title"]
 				}
 			},
 			"required": [
@@ -8515,7 +8525,8 @@
 				"empty",
 				"errors",
 				"conflict",
-				"sourceMode"
+				"sourceMode",
+				"backlinks"
 			]
 		}
 	},
