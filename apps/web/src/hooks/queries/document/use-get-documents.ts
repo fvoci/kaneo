@@ -6,5 +6,10 @@ export function useGetDocuments(projectId: string) {
     queryKey: ["documents", projectId],
     queryFn: () => getDocuments(projectId),
     enabled: !!projectId,
+    // Documents change from screens this query is not mounted on, and the
+    // client-wide `refetchOnMount: false` would serve whatever was cached
+    // before that edit. Correctness here cannot wait for a websocket.
+    refetchOnMount: "always" as const,
+    staleTime: 0,
   });
 }

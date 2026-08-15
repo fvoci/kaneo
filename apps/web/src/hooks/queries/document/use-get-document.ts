@@ -6,5 +6,10 @@ export function useGetDocument(id: string | undefined) {
     queryKey: ["document", id],
     queryFn: () => getDocument(id ?? ""),
     enabled: !!id,
+    // Documents change from screens this query is not mounted on, and the
+    // client-wide `refetchOnMount: false` would serve whatever was cached
+    // before that edit. Correctness here cannot wait for a websocket.
+    refetchOnMount: "always" as const,
+    staleTime: 0,
   });
 }
