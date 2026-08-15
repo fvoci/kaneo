@@ -101,11 +101,8 @@ const REFERENCED_TASK = {
   title: "이미 참조한 태스크",
   number: 1,
   status: "to-do",
-  priority: null,
   projectId: "p1",
   projectSlug: "KAN",
-  assigneeName: null,
-  linkedAt: "2026-01-01T00:00:00.000Z",
 };
 
 /** Row actions live behind a right-click, the way task relations expose them. */

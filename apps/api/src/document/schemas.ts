@@ -22,7 +22,12 @@ export const documentSchema = v.object({
 /**
  * List rows omit `content` so a project with large documents does not ship
  * every body on every list render, and omit `archivedAt` because listing
- * excludes archived documents.
+ * excludes archived documents. `version`, `createdBy` and `updatedBy` are left
+ * to the single-document read, which is what a save and the conflict banner
+ * work from.
+ *
+ * `parentId` and `position` stay: the tree renders nesting and sibling order
+ * straight from the list.
  */
 export const documentSummarySchema = v.object({
   id: v.string(),
@@ -31,9 +36,6 @@ export const documentSummarySchema = v.object({
   position: v.string(),
   number: v.number(),
   title: v.string(),
-  version: v.number(),
-  createdBy: v.nullable(v.string()),
-  updatedBy: v.nullable(v.string()),
   createdAt: v.date(),
   updatedAt: v.date(),
 });
@@ -85,8 +87,6 @@ export const documentBacklinkSchema = v.object({
   projectSlug: v.string(),
   number: v.number(),
   title: v.string(),
-  updatedAt: v.date(),
-  linkedAt: v.date(),
 });
 
 export const documentBacklinkListSchema = v.array(documentBacklinkSchema);
@@ -97,11 +97,8 @@ export const documentTaskSchema = v.object({
   title: v.string(),
   number: v.nullable(v.number()),
   status: v.string(),
-  priority: v.nullable(v.string()),
   projectId: v.string(),
   projectSlug: v.string(),
-  assigneeName: v.nullable(v.string()),
-  linkedAt: v.date(),
 });
 
 export const documentTaskListSchema = v.array(documentTaskSchema);

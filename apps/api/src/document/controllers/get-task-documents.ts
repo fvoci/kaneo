@@ -23,8 +23,6 @@ async function getTaskDocuments(taskId: string) {
       projectSlug: projectTable.slug,
       number: documentTable.number,
       title: documentTable.title,
-      updatedAt: documentTable.updatedAt,
-      linkedAt: documentTaskLinkTable.createdAt,
     })
     .from(documentTaskLinkTable)
     .innerJoin(

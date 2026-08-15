@@ -92,8 +92,6 @@ const LINKED_DOCUMENT = {
   projectSlug: "P2",
   number: 1,
   title: "이미 연결된 문서",
-  updatedAt: "2026-01-01T00:00:00.000Z",
-  linkedAt: "2026-01-01T00:00:00.000Z",
 };
 
 async function openRowMenu(documentTitle: string) {
