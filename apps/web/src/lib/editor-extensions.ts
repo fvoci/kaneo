@@ -1,6 +1,5 @@
 import type { AnyExtension } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Table } from "@tiptap/extension-table";
 import TableCell from "@tiptap/extension-table-cell";
@@ -73,12 +72,14 @@ export function createEditorExtensions({
       codeBlock: {
         HTMLAttributes: { class: "kaneo-tiptap-codeblock" },
       },
-    }),
-    Link.configure({
-      autolink: true,
-      defaultProtocol: "https",
-      linkOnPaste: true,
-      openOnClick: readOnly,
+      // StarterKit bundles Link; registering a second one collides on the mark
+      // name and makes Tiptap warn about duplicate extensions.
+      link: {
+        autolink: true,
+        defaultProtocol: "https",
+        linkOnPaste: true,
+        openOnClick: readOnly,
+      },
     }),
     Markdown.configure({
       markedOptions: {
@@ -147,12 +148,12 @@ export function createDocumentExtensions({
       codeBlock: {
         HTMLAttributes: { class: "kaneo-tiptap-codeblock" },
       },
-    }),
-    Link.configure({
-      autolink: true,
-      defaultProtocol: "https",
-      linkOnPaste: true,
-      openOnClick: readOnly,
+      link: {
+        autolink: true,
+        defaultProtocol: "https",
+        linkOnPaste: true,
+        openOnClick: readOnly,
+      },
     }),
     Markdown.configure({
       markedOptions: {

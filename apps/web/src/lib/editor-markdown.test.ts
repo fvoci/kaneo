@@ -201,6 +201,39 @@ describe("markdown round-trip: known losses", () => {
   });
 });
 
+describe("extension sets are well formed", () => {
+  const duplicates = (extensions: AnyExtension[]) => {
+    const seen = new Set<string>();
+    const dupes: string[] = [];
+    for (const extension of extensions) {
+      const name = extension.name;
+      if (seen.has(name)) dupes.push(name);
+      seen.add(name);
+    }
+    return dupes;
+  };
+
+  // A duplicate name makes Tiptap warn and lets the later registration silently
+  // replace the earlier one's configuration. StarterKit already bundles Link,
+  // Underline and the list extensions, so they must be configured through it.
+  it("registers no extension name twice on the comment surface", () => {
+    expect(duplicates(createEditorExtensions())).toEqual([]);
+  });
+
+  it("registers no extension name twice on the document surface", () => {
+    expect(duplicates(createDocumentExtensions())).toEqual([]);
+  });
+
+  it("keeps link configured on both surfaces", () => {
+    for (const html of [
+      htmlFor(createEditorExtensions(), "[a](https://example.com)"),
+      htmlFor(createDocumentExtensions(), "[a](https://example.com)"),
+    ]) {
+      expect(html).toContain('href="https://example.com"');
+    }
+  });
+});
+
 describe("document surface", () => {
   const docTrip = (markdown: string, times = 1) =>
     roundTripWith(createDocumentExtensions(), markdown, times);

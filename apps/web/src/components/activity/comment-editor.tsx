@@ -805,7 +805,18 @@ export default function CommentEditor({
         },
       },
       onUpdate: ({ editor: activeEditor }) => {
-        if (readOnly || disabled || !onChange || isSyncingRef.current) return;
+        // A freshly created editor is empty until the hydration effect seeds it
+        // with `value`. Reporting that empty state as an edit hands the parent
+        // an empty string it will happily save over the stored body.
+        if (
+          readOnly ||
+          disabled ||
+          !onChange ||
+          isSyncingRef.current ||
+          !hasHydratedRef.current
+        ) {
+          return;
+        }
         const markdown = normalizeMarkdown(activeEditor.getMarkdown());
         latestValueRef.current = markdown;
         onChange(markdown);
