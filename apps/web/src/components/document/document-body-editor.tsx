@@ -38,8 +38,12 @@ export default function DocumentBodyEditor({
       // wraps this editor.
       slashMenuPosition="fixed"
       // Drop the comment box's fixed height so a document grows with its
-      // content rather than becoming a small scrollable panel.
-      className="h-full [&_.kaneo-comment-editor-content_.ProseMirror]:min-h-[24rem] [&_.kaneo-comment-editor-content_.ProseMirror]:max-h-none [&_.kaneo-comment-editor-content_.ProseMirror]:overflow-visible [&_.kaneo-comment-editor-content_.ProseMirror]:px-0 [&_.kaneo-comment-editor-content_.ProseMirror]:pt-1 [&_.kaneo-comment-editor-content_.ProseMirror]:pb-8"
+      // content rather than becoming a small scrollable panel. The shell is
+      // deliberately not `h-full`: that pins it to the scroll container's full
+      // height, which pushes whatever follows the body below the fold even
+      // when the body is one line. The minimum lives on the editable area, so
+      // an empty document still has a large click target.
+      className="[&_.kaneo-comment-editor-content_.ProseMirror]:min-h-[24rem] [&_.kaneo-comment-editor-content_.ProseMirror]:max-h-none [&_.kaneo-comment-editor-content_.ProseMirror]:overflow-visible [&_.kaneo-comment-editor-content_.ProseMirror]:px-0 [&_.kaneo-comment-editor-content_.ProseMirror]:pt-1 [&_.kaneo-comment-editor-content_.ProseMirror]:pb-8"
     />
   );
 }

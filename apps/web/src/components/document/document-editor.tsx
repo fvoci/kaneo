@@ -126,7 +126,7 @@ export default function DocumentEditor({
             value={content}
             onChange={(event) => setContent(event.target.value)}
             placeholder={t("documents:contentPlaceholder")}
-            className="h-full border-0 bg-transparent font-mono text-sm shadow-none"
+            className="min-h-[24rem] border-0 bg-transparent font-mono text-sm shadow-none"
             unstyled
           />
         ) : (
