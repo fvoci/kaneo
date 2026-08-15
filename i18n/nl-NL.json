@@ -2156,7 +2156,8 @@
 			"exit": "Back to rich text"
 		},
 		"backlinks": {
-			"title": "Referenced by"
+			"title": "Referenced by",
+			"empty": "No documents reference this task yet."
 		}
 	}
 }

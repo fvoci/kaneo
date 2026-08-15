@@ -27,8 +27,6 @@ export default function TaskBacklinks({
   const [isOpen, setIsOpen] = useState(true);
   const { data: documents = [] } = useGetTaskDocuments(taskId);
 
-  if (documents.length === 0) return null;
-
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
       <div className="flex items-center gap-1.5">
@@ -42,10 +40,14 @@ export default function TaskBacklinks({
             ) : (
               <ChevronRight className="size-4" />
             )}
-            {t("documents:backlinks.title")}
-            <span className="text-muted-foreground/70">{documents.length}</span>
+            <span>{t("documents:backlinks.title")}</span>
           </button>
         </CollapsibleTrigger>
+        {documents.length > 0 && (
+          <span className="text-muted-foreground text-xs">
+            {documents.length}
+          </span>
+        )}
       </div>
 
       <CollapsibleContent>
@@ -66,6 +68,12 @@ export default function TaskBacklinks({
             </li>
           ))}
         </ul>
+
+        {documents.length === 0 && (
+          <p className="px-2 py-1 text-muted-foreground text-xs">
+            {t("documents:backlinks.empty")}
+          </p>
+        )}
       </CollapsibleContent>
     </Collapsible>
   );

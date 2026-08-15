@@ -8503,9 +8503,12 @@
 					"properties": {
 						"title": {
 							"type": "string"
+						},
+						"empty": {
+							"type": "string"
 						}
 					},
-					"required": ["title"]
+					"required": ["title", "empty"]
 				}
 			},
 			"required": [
