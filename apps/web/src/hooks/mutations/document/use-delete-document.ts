@@ -11,6 +11,8 @@ function useDeleteDocument(projectId: string) {
       void queryClient.invalidateQueries({
         queryKey: ["documents", projectId],
       });
+      // An archived document drops out of every backlink list.
+      void queryClient.invalidateQueries({ queryKey: ["task-documents"] });
     },
   });
 }
