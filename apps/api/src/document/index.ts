@@ -104,7 +104,7 @@ const document = new Hono<{
     describeRoute({
       operationId: "listTaskDocuments",
       tags: ["Documents"],
-      description: "List the documents whose body references a task",
+      description: "List the documents linked to a task",
       responses: {
         200: {
           description: "Documents ordered by most recently updated",
