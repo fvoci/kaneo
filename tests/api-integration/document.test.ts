@@ -1,7 +1,8 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import claimDocumentNumber from "../../apps/api/src/document/controllers/claim-document-number";
+import { subscribeToEvent } from "../../apps/api/src/events";
 import { createApp } from "../../apps/api/src/index";
 import { mockAuthenticatedSession } from "./helpers/auth";
 import { resetTestDatabase } from "./helpers/database";
@@ -50,6 +51,26 @@ function updateDocument(
 
 function deleteDocument(app: App, id: string) {
   return app.request(`/api/document/${id}`, { method: "DELETE" });
+}
+
+type DeletedEvent = { affectedProjectIds?: string[] };
+
+const deletedEvents: DeletedEvent[] = [];
+let deleteSubscriberReady = false;
+
+/**
+ * `subscribeToEvent` registers process-wide, so the subscription is made once
+ * and the buffer cleared per capture rather than re-subscribing per test.
+ */
+function captureEvents(type: "document.deleted") {
+  if (!deleteSubscriberReady) {
+    deleteSubscriberReady = true;
+    subscribeToEvent<DeletedEvent>(type, async (data) => {
+      deletedEvents.push(data);
+    });
+  }
+  deletedEvents.length = 0;
+  return deletedEvents;
 }
 
 async function seedDocument(projectId: string, overrides = {}) {
@@ -457,6 +478,154 @@ describe("API integration: documents", () => {
       const { app } = createApp();
 
       expect((await deleteDocument(app, document.id)).status).toBe(404);
+    });
+
+    // Archiving only the document asked for would leave its children in the
+    // list pointing at a parent that is no longer in it, and every surface that
+    // reads the tree would need its own rule for orphans.
+    it("archives the whole subtree, not just the document asked for", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const root = await seedDocument(project.id, { title: "Root" });
+      const child = await seedDocument(project.id, {
+        title: "Child",
+        parentId: root.id,
+      });
+      const grandchild = await seedDocument(project.id, {
+        title: "Grandchild",
+        parentId: child.id,
+      });
+      const bystander = await seedDocument(project.id, { title: "Bystander" });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      expect((await deleteDocument(app, root.id)).status).toBe(200);
+
+      const rows = await db
+        .select({
+          id: schema.documentTable.id,
+          archivedAt: schema.documentTable.archivedAt,
+        })
+        .from(schema.documentTable)
+        .where(eq(schema.documentTable.projectId, project.id));
+      const archivedAtById = new Map(
+        rows.map((row) => [row.id, row.archivedAt]),
+      );
+
+      for (const descendant of [root, child, grandchild]) {
+        expect(archivedAtById.get(descendant.id)).not.toBeNull();
+      }
+      expect(archivedAtById.get(bystander.id)).toBeNull();
+
+      const listed = await (await listDocuments(app, project.id)).json();
+      expect(listed.map((d: { title: string }) => d.title)).toEqual([
+        "Bystander",
+      ]);
+    });
+
+    // A restore will tell one archive operation from another by the timestamp
+    // it wrote, so everything archived together has to carry the same one.
+    it("stamps the whole subtree with a single archivedAt", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const root = await seedDocument(project.id);
+      const child = await seedDocument(project.id, { parentId: root.id });
+      const grandchild = await seedDocument(project.id, { parentId: child.id });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      await deleteDocument(app, root.id);
+
+      const rows = await db
+        .select({ archivedAt: schema.documentTable.archivedAt })
+        .from(schema.documentTable)
+        .where(
+          inArray(schema.documentTable.id, [root.id, child.id, grandchild.id]),
+        );
+
+      const stamps = new Set(
+        rows.map((row) => row.archivedAt?.toISOString() ?? "null"),
+      );
+      expect(stamps.size).toBe(1);
+      expect([...stamps][0]).not.toBe("null");
+    });
+
+    // The branch was archived by an earlier operation and carries that
+    // operation's timestamp. Restamping it would fold it into this one, and a
+    // restore of this document would drag it back up too.
+    it("leaves a branch archived earlier at its own archivedAt", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const root = await seedDocument(project.id);
+      const earlier = new Date("2020-01-01T00:00:00.000Z");
+      const alreadyGone = await seedDocument(project.id, {
+        parentId: root.id,
+        archivedAt: earlier,
+      });
+      const stillHere = await seedDocument(project.id, { parentId: root.id });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      await deleteDocument(app, root.id);
+
+      const [gone] = await db
+        .select({ archivedAt: schema.documentTable.archivedAt })
+        .from(schema.documentTable)
+        .where(eq(schema.documentTable.id, alreadyGone.id));
+      const [fresh] = await db
+        .select({ archivedAt: schema.documentTable.archivedAt })
+        .from(schema.documentTable)
+        .where(eq(schema.documentTable.id, stillHere.id));
+
+      expect(gone?.archivedAt?.toISOString()).toBe(earlier.toISOString());
+      expect(fresh?.archivedAt?.toISOString()).not.toBe(earlier.toISOString());
+    });
+
+    // A descendant's backlink panel lives on its task's project channel, so a
+    // cascade that only reports the target's own links leaves that panel
+    // listing a document that has just gone.
+    it("reports the projects of tasks the whole subtree referenced", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const other = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const [task] = await db
+        .insert(schema.taskTable)
+        .values({
+          projectId: other.project.id,
+          title: "Referenced by a descendant",
+          status: "to-do",
+          number: 1,
+          position: 1,
+        })
+        .returning();
+      if (!task) throw new Error("Failed to seed task");
+
+      const root = await seedDocument(project.id);
+      const child = await seedDocument(project.id, { parentId: root.id });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      await app.request(`/api/document/${child.id}/tasks`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ taskId: task.id }),
+      });
+
+      const events = captureEvents("document.deleted");
+      await deleteDocument(app, root.id);
+
+      expect(events).toHaveLength(1);
+      expect(events[0]?.affectedProjectIds).toContain(other.project.id);
     });
   });
 
