@@ -371,7 +371,7 @@ describe("API integration: document task links", () => {
       const task = await seedTask(project.id, 1);
       const [document] = await db
         .insert(schema.documentTable)
-        .values({ projectId: project.id, title: "읽기 전용" })
+        .values({ projectId: project.id, number: 1, title: "읽기 전용" })
         .returning();
       mockAuthenticatedSession(member.user);
       const { app } = createApp();

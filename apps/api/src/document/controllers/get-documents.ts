@@ -15,6 +15,7 @@ async function getDocuments(projectId: string) {
       projectId: documentTable.projectId,
       parentId: documentTable.parentId,
       position: documentTable.position,
+      number: documentTable.number,
       title: documentTable.title,
       version: documentTable.version,
       createdBy: documentTable.createdBy,

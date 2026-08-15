@@ -1,6 +1,6 @@
 {
-	"id": "13c85a4f-e8dd-4335-a4cb-445fa4e64258",
-	"prevId": "6ed5db76-6409-4440-81ab-7a38f6832db9",
+	"id": "ff2a8ab3-13ed-4660-a94a-6124078b0bcd",
+	"prevId": "13c85a4f-e8dd-4335-a4cb-445fa4e64258",
 	"version": "7",
 	"dialect": "postgresql",
 	"tables": {
@@ -2473,6 +2473,13 @@
 				},
 				"last_task_number": {
 					"name": "last_task_number",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"last_document_number": {
+					"name": "last_document_number",
 					"type": "integer",
 					"primaryKey": false,
 					"notNull": true,

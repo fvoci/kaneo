@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
+import claimDocumentNumber from "../../apps/api/src/document/controllers/claim-document-number";
 import { createApp } from "../../apps/api/src/index";
 import { mockAuthenticatedSession } from "./helpers/auth";
 import { resetTestDatabase } from "./helpers/database";
@@ -52,10 +53,13 @@ function deleteDocument(app: App, id: string) {
 }
 
 async function seedDocument(projectId: string, overrides = {}) {
+  // Seeding skips the controller but still claims from the project's counter,
+  // so a seeded document and one created through the API cannot collide.
   const [document] = await db
     .insert(schema.documentTable)
     .values({
       projectId,
+      number: await claimDocumentNumber(projectId),
       title: "Seeded document",
       content: "seeded body",
       ...overrides,

@@ -2,7 +2,13 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { documentTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import claimDocumentNumber from "./claim-document-number";
 
+/**
+ * The claim and the insert share a transaction: a number handed out for a
+ * document that then fails to insert would be spent on nothing, leaving a hole
+ * in the project's sequence.
+ */
 async function createDocument({
   projectId,
   title,
@@ -14,20 +20,27 @@ async function createDocument({
   content?: string;
   currentUserId: string;
 }) {
-  const [document] = await db
-    .insert(documentTable)
-    .values({
-      projectId,
-      title,
-      content: content ?? null,
-      createdBy: currentUserId,
-      updatedBy: currentUserId,
-    })
-    .returning();
+  const document = await db.transaction(async (tx) => {
+    const number = await claimDocumentNumber(projectId, tx);
 
-  if (!document) {
-    throw new HTTPException(500, { message: "Failed to create document" });
-  }
+    const [created] = await tx
+      .insert(documentTable)
+      .values({
+        projectId,
+        number,
+        title,
+        content: content ?? null,
+        createdBy: currentUserId,
+        updatedBy: currentUserId,
+      })
+      .returning();
+
+    if (!created) {
+      throw new HTTPException(500, { message: "Failed to create document" });
+    }
+
+    return created;
+  });
 
   await publishEvent("document.created", {
     documentId: document.id,

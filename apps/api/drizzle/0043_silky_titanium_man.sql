@@ -1,0 +1,1 @@
+ALTER TABLE "project" ADD COLUMN "last_document_number" integer DEFAULT 0 NOT NULL;

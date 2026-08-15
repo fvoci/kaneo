@@ -3,6 +3,7 @@ CREATE TABLE "document" (
 	"project_id" text NOT NULL,
 	"parent_id" text,
 	"position" text DEFAULT 'a0' NOT NULL,
+	"number" integer NOT NULL,
 	"title" text NOT NULL,
 	"content" text,
 	"version" integer DEFAULT 1 NOT NULL,
@@ -10,7 +11,8 @@ CREATE TABLE "document" (
 	"updated_by" text,
 	"archived_at" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "document_project_number_unique" UNIQUE("project_id","number")
 );
 --> statement-breakpoint
 CREATE TABLE "document_task_link" (

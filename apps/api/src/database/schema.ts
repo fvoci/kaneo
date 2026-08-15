@@ -329,6 +329,9 @@ export const projectTable = pgTable(
     isPublic: boolean("is_public").default(false),
     archivedAt: timestamp("archived_at", { mode: "date" }),
     lastTaskNumber: integer("last_task_number").notNull().default(0),
+    // Documents are numbered per project like tasks, from their own counter so
+    // the two sequences do not interleave.
+    lastDocumentNumber: integer("last_document_number").notNull().default(0),
     position: integer("position").notNull().default(0),
   },
   (table) => [
@@ -467,6 +470,10 @@ export const documentTable = pgTable(
     // Fractional index: ordering keys are compared lexicographically so a
     // reorder rewrites one row instead of renumbering every sibling.
     position: text("position").notNull().default("a0"),
+    // Human-readable identifier, rendered with the project slug as "P2-D1".
+    // Claimed from `project.lastDocumentNumber`, never reused: an archived
+    // document keeps its number so a reference to it stays meaningful.
+    number: integer("number").notNull(),
     title: text("title").notNull(),
     content: text("content"),
     // Optimistic concurrency. Writes carrying a stale version are rejected so
@@ -495,6 +502,7 @@ export const documentTable = pgTable(
       table.parentId,
       table.position,
     ),
+    unique("document_project_number_unique").on(table.projectId, table.number),
   ],
 );
 
