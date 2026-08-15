@@ -521,18 +521,24 @@ export default function CommentEditor({
             .run();
         },
       },
-      {
-        id: "file",
-        label: t("activity:comment.editor.slashFile"),
-        group: "insert",
-        search: t("activity:comment.editor.searchFile"),
-        run: (activeEditor, range) => {
-          activeEditor.chain().focus().deleteRange(range).run();
-          openImagePicker(activeEditor);
-        },
-      },
+      // Offered only where an upload can actually complete. Surfaces without a
+      // task to attach to (documents) would open a picker that always fails.
+      ...(canUploadFiles
+        ? [
+            {
+              id: "file",
+              label: t("activity:comment.editor.slashFile"),
+              group: "insert" as const,
+              search: t("activity:comment.editor.searchFile"),
+              run: (activeEditor: Editor, range: SlashRange) => {
+                activeEditor.chain().focus().deleteRange(range).run();
+                openImagePicker(activeEditor);
+              },
+            },
+          ]
+        : []),
     ],
-    [openImagePicker, t],
+    [canUploadFiles, openImagePicker, t],
   );
 
   useEffect(() => {

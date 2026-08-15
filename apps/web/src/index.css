@@ -414,6 +414,11 @@ input:-webkit-autofill:active {
     position: fixed;
     z-index: 50;
     min-width: 16rem;
+    /* The command list is taller than a short editor, so cap it and scroll
+       rather than letting it run past the viewport. */
+    max-height: min(22rem, 60vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
     border-radius: 0.5rem;
     background: var(--popover);

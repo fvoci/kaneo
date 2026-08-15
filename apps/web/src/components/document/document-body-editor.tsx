@@ -32,6 +32,14 @@ export default function DocumentBodyEditor({
       placeholder={placeholder ?? t("documents:contentPlaceholder")}
       buildExtensions={createDocumentExtensions}
       showQuickAttachButton={false}
+      // The document body scrolls with the page, so the slash menu is
+      // positioned against the viewport instead of the editor shell: an
+      // absolutely positioned menu gets clipped by the scroll container that
+      // wraps this editor.
+      slashMenuPosition="fixed"
+      // Drop the comment box's fixed height so a document grows with its
+      // content rather than becoming a small scrollable panel.
+      className="h-full [&_.kaneo-comment-editor-content_.ProseMirror]:min-h-[24rem] [&_.kaneo-comment-editor-content_.ProseMirror]:max-h-none [&_.kaneo-comment-editor-content_.ProseMirror]:overflow-visible [&_.kaneo-comment-editor-content_.ProseMirror]:px-0 [&_.kaneo-comment-editor-content_.ProseMirror]:pt-1 [&_.kaneo-comment-editor-content_.ProseMirror]:pb-8"
     />
   );
 }
