@@ -2126,6 +2126,7 @@
 		"title": "문서",
 		"pageTitle": "{{name}} – 문서",
 		"new": "새 문서",
+		"open": "문서 열기",
 		"untitled": "제목 없는 문서",
 		"titlePlaceholder": "문서 제목",
 		"contentPlaceholder": "마크다운으로 작성하세요…",

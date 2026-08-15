@@ -2210,6 +2210,7 @@
 			"saveFailed": "Could not save the document."
 		},
 		"new": "New document",
+		"open": "Открыть документ",
 		"pageTitle": "{{name}} – Documents",
 		"save": "Save",
 		"saving": "Saving…",

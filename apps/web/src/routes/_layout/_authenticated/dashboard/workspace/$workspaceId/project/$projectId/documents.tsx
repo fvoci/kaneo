@@ -5,17 +5,29 @@ import {
   useParams,
 } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ProjectLayout from "@/components/common/project-layout";
 import DocumentEmptyState from "@/components/document/document-empty-state";
 import DocumentList from "@/components/document/document-list";
 import PageTitle from "@/components/page-title";
+import {
+  AlertDialog,
+  AlertDialogClose,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import useCreateDocument from "@/hooks/mutations/document/use-create-document";
+import useDeleteDocument from "@/hooks/mutations/document/use-delete-document";
 import { useGetDocuments } from "@/hooks/queries/document/use-get-documents";
 import useGetProject from "@/hooks/queries/project/use-get-project";
+import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { toast } from "@/lib/toast";
+import type { DocumentSummary } from "@/types/document";
 
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/documents",
@@ -36,6 +48,14 @@ function RouteComponent() {
   const { data: project } = useGetProject({ id: projectId, workspaceId });
   const { data: documents, isLoading, isError } = useGetDocuments(projectId);
   const createDocument = useCreateDocument();
+  const deleteDocument = useDeleteDocument(projectId);
+  const { canManageTasks } = useWorkspacePermission();
+
+  // Deleting is offered from the list, so the dialog lives here rather than in
+  // the editor: a document can be deleted without being open.
+  const [deleteTarget, setDeleteTarget] = useState<DocumentSummary | null>(
+    null,
+  );
 
   useEffect(() => {
     if (isError) toast.error(t("documents:errors.loadFailed"));
@@ -61,6 +81,26 @@ function RouteComponent() {
   // The open document lives in the child route's params; `strict: false` reads
   // them from the deepest match without this route having to declare them.
   const { documentId: selectedId } = useParams({ strict: false });
+
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+    const targetId = deleteTarget.id;
+    setDeleteTarget(null);
+
+    deleteDocument.mutate(targetId, {
+      // Only the open document needs the redirect; deleting any other one
+      // leaves the current view alone.
+      onSuccess: () => {
+        if (targetId !== selectedId) return;
+        void navigate({
+          to: "/dashboard/workspace/$workspaceId/project/$projectId/documents",
+          params: { workspaceId, projectId },
+          replace: true,
+        });
+      },
+      onError: () => toast.error(t("documents:errors.deleteFailed")),
+    });
+  };
 
   const hasDocuments = (documents?.length ?? 0) > 0;
 
@@ -92,7 +132,9 @@ function RouteComponent() {
               <DocumentList
                 documents={documents ?? []}
                 selectedId={selectedId}
+                canDelete={canManageTasks()}
                 onSelect={openDocument}
+                onDelete={setDeleteTarget}
               />
             </aside>
             <Outlet />
@@ -104,6 +146,40 @@ function RouteComponent() {
           />
         )}
       </ProjectLayout>
+
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("documents:deleteConfirmTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("documents:deleteConfirmBody")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogClose render={<Button variant="outline" size="sm" />}>
+              {t("documents:cancel")}
+            </AlertDialogClose>
+            <AlertDialogClose
+              render={
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDelete}
+                />
+              }
+            >
+              {t("documents:delete")}
+            </AlertDialogClose>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

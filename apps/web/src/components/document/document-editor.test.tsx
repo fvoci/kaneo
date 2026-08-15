@@ -79,11 +79,9 @@ function renderEditor(
     <DocumentEditor
       document={makeDocument(documentOverrides)}
       isSaving={false}
-      isDeleting={false}
       conflictVersion={null}
       workspaceId="w1"
       onSave={onSave}
-      onDelete={vi.fn()}
       onReloadAfterConflict={vi.fn()}
       {...props}
     />,
@@ -197,11 +195,9 @@ describe("DocumentEditor save wiring", () => {
         <DocumentEditor
           document={makeDocument({ content: "" })}
           isSaving={false}
-          isDeleting={false}
           conflictVersion={9}
           workspaceId="w1"
           onSave={onSave}
-          onDelete={vi.fn()}
           onReloadAfterConflict={vi.fn()}
         />,
       );

@@ -1,10 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import DocumentEditor from "@/components/document/document-editor";
 import { DocumentVersionConflictError } from "@/fetchers/document/update-document";
-import useDeleteDocument from "@/hooks/mutations/document/use-delete-document";
 import useUpdateDocument from "@/hooks/mutations/document/use-update-document";
 import { useGetDocument } from "@/hooks/queries/document/use-get-document";
 import { toast } from "@/lib/toast";
@@ -18,12 +17,10 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { t } = useTranslation();
   const { documentId, projectId, workspaceId } = Route.useParams();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: document } = useGetDocument(documentId);
   const updateDocument = useUpdateDocument(projectId);
-  const deleteDocument = useDeleteDocument(projectId);
 
   // The conflict carries the document it belongs to: the router reuses this
   // component when only the parameter changes, and a conflict from the previous
@@ -63,19 +60,6 @@ function RouteComponent() {
     void queryClient.invalidateQueries({ queryKey: ["documents", projectId] });
   };
 
-  const handleDelete = () => {
-    deleteDocument.mutate(documentId, {
-      // Back to the index, which picks whatever document is left.
-      onSuccess: () =>
-        void navigate({
-          to: "/dashboard/workspace/$workspaceId/project/$projectId/documents",
-          params: { workspaceId, projectId },
-          replace: true,
-        }),
-      onError: () => toast.error(t("documents:errors.deleteFailed")),
-    });
-  };
-
   if (!document) return null;
 
   return (
@@ -83,11 +67,9 @@ function RouteComponent() {
       key={document.id}
       document={document}
       isSaving={updateDocument.isPending}
-      isDeleting={deleteDocument.isPending}
       conflictVersion={conflictVersion}
       workspaceId={workspaceId}
       onSave={handleSave}
-      onDelete={handleDelete}
       onReloadAfterConflict={handleReloadAfterConflict}
     />
   );

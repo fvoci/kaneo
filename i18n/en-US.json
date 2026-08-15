@@ -2126,6 +2126,7 @@
 		"title": "Documents",
 		"pageTitle": "{{name}} – Documents",
 		"new": "New document",
+		"open": "Open document",
 		"untitled": "Untitled document",
 		"titlePlaceholder": "Document title",
 		"contentPlaceholder": "Write in Markdown…",

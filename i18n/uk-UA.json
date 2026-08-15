@@ -2154,6 +2154,7 @@
 			"saveFailed": "Could not save the document."
 		},
 		"new": "New document",
+		"open": "Відкрити документ",
 		"pageTitle": "{{name}} – Documents",
 		"save": "Save",
 		"saving": "Saving…",

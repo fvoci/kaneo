@@ -1,18 +1,9 @@
-import { Code2, Eye, Trash2 } from "lucide-react";
+import { Code2, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import DocumentBodyEditor from "@/components/document/document-body-editor";
 import DocumentConflictBanner from "@/components/document/document-conflict-banner";
 import DocumentTaskReferences from "@/components/document/document-task-references";
-import {
-  AlertDialog,
-  AlertDialogClose,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,28 +12,23 @@ import type { Document } from "@/types/document";
 type DocumentEditorProps = {
   document: Document;
   isSaving: boolean;
-  isDeleting: boolean;
   conflictVersion: number | null;
   workspaceId: string;
   onSave: (draft: { title: string; content: string; version: number }) => void;
-  onDelete: () => void;
   onReloadAfterConflict: () => void;
 };
 
 export default function DocumentEditor({
   document,
   isSaving,
-  isDeleting,
   conflictVersion,
   workspaceId,
   onSave,
-  onDelete,
   onReloadAfterConflict,
 }: DocumentEditorProps) {
   const { t } = useTranslation();
   const [title, setTitle] = useState(document.title);
   const [content, setContent] = useState(document.content ?? "");
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   // Markdown that the rich editor cannot represent survives a save only if the
   // user edits it as source, so the raw view stays available.
   const [isSourceMode, setIsSourceMode] = useState(false);
@@ -109,15 +95,6 @@ export default function DocumentEditor({
         >
           {isSaving ? t("documents:saving") : t("documents:save")}
         </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          disabled={isDeleting}
-          onClick={() => setIsDeleteOpen(true)}
-          aria-label={t("documents:delete")}
-        >
-          <Trash2 className="size-4" />
-        </Button>
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto p-4">
@@ -146,31 +123,6 @@ export default function DocumentEditor({
           />
         </div>
       </div>
-
-      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("documents:deleteConfirmTitle")}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("documents:deleteConfirmBody")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogClose render={<Button variant="outline" size="sm" />}>
-              {t("documents:cancel")}
-            </AlertDialogClose>
-            <AlertDialogClose
-              render={
-                <Button variant="destructive" size="sm" onClick={onDelete} />
-              }
-            >
-              {t("documents:delete")}
-            </AlertDialogClose>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
