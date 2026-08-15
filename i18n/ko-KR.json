@@ -2121,5 +2121,31 @@
 		"branding": {
 			"poweredBy": "제공"
 		}
+	},
+	"documents": {
+		"title": "문서",
+		"pageTitle": "{{name}} – 문서",
+		"new": "새 문서",
+		"untitled": "제목 없는 문서",
+		"titlePlaceholder": "문서 제목",
+		"contentPlaceholder": "마크다운으로 작성하세요…",
+		"save": "저장",
+		"saving": "저장 중…",
+		"delete": "삭제",
+		"deleteConfirmTitle": "이 문서를 삭제할까요?",
+		"deleteConfirmBody": "문서가 보관 처리되어 목록에서 사라집니다. 화면에서는 되돌릴 수 없습니다.",
+		"cancel": "취소",
+		"updatedAt": "{{when}} 수정됨",
+		"empty": {
+			"title": "아직 문서가 없습니다",
+			"subtitle": "프로토콜, 메모, 결정 사항을 작업 옆에 두려면 문서를 만드세요."
+		},
+		"errors": {
+			"loadFailed": "문서를 불러오지 못했습니다.",
+			"createFailed": "문서를 만들지 못했습니다.",
+			"saveFailed": "문서를 저장하지 못했습니다.",
+			"deleteFailed": "문서를 삭제하지 못했습니다.",
+			"conflict": "다른 사람이 먼저 저장했습니다. 새로고침하면 그 내용이 보이며, 저장하지 않은 수정은 사라집니다."
+		}
 	}
 }

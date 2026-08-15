@@ -1,6 +1,12 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { CalendarDays, SquareKanban, SquircleDashed } from "lucide-react";
+import {
+  CalendarDays,
+  FileText,
+  SquareKanban,
+  SquircleDashed,
+} from "lucide-react";
 import { type ReactNode, useState } from "react";
+import { useTranslation } from "react-i18next";
 import MobileProjectNav from "@/components/common/header/mobile-project-nav";
 import ProjectCrumbSelect from "@/components/common/header/project-crumb-select";
 import WorkspaceCrumbSelect from "@/components/common/header/workspace-crumb-select";
@@ -26,7 +32,7 @@ type ProjectLayoutProps = {
   headerActions?: ReactNode;
   children: ReactNode;
   showViewSwitcher?: boolean;
-  activeView?: "backlog" | "board" | "gantt";
+  activeView?: "backlog" | "board" | "documents" | "gantt";
 };
 
 export default function ProjectLayout({
@@ -37,6 +43,7 @@ export default function ProjectLayout({
   showViewSwitcher = true,
   activeView,
 }: ProjectLayoutProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { data: project } = useGetProject({ id: projectId, workspaceId });
@@ -49,9 +56,11 @@ export default function ProjectLayout({
     activeView ??
     (location.pathname.includes("/backlog")
       ? "backlog"
-      : location.pathname.includes("/gantt")
-        ? "gantt"
-        : "board");
+      : location.pathname.includes("/documents")
+        ? "documents"
+        : location.pathname.includes("/gantt")
+          ? "gantt"
+          : "board");
 
   const handleNavigateToBacklog = () => {
     navigate({
@@ -63,6 +72,13 @@ export default function ProjectLayout({
   const handleNavigateToBoard = () => {
     navigate({
       to: "/dashboard/workspace/$workspaceId/project/$projectId/board",
+      params: { workspaceId, projectId },
+    });
+  };
+
+  const handleNavigateToDocuments = () => {
+    navigate({
+      to: "/dashboard/workspace/$workspaceId/project/$projectId/documents",
       params: { workspaceId, projectId },
     });
   };
@@ -79,9 +95,11 @@ export default function ProjectLayout({
       to:
         resolvedView === "backlog"
           ? "/dashboard/workspace/$workspaceId/project/$projectId/backlog"
-          : resolvedView === "gantt"
-            ? "/dashboard/workspace/$workspaceId/project/$projectId/gantt"
-            : "/dashboard/workspace/$workspaceId/project/$projectId/board",
+          : resolvedView === "documents"
+            ? "/dashboard/workspace/$workspaceId/project/$projectId/documents"
+            : resolvedView === "gantt"
+              ? "/dashboard/workspace/$workspaceId/project/$projectId/gantt"
+              : "/dashboard/workspace/$workspaceId/project/$projectId/board",
       params: {
         workspaceId,
         projectId: nextProjectId,
@@ -134,6 +152,7 @@ export default function ProjectLayout({
                 activeView={resolvedView}
                 onSelectBacklog={handleNavigateToBacklog}
                 onSelectBoard={handleNavigateToBoard}
+                onSelectDocuments={handleNavigateToDocuments}
                 onSelectGantt={handleNavigateToGantt}
                 onSelectProject={handleProjectSwitch}
                 onAddProject={() => setIsCreateProjectModalOpen(true)}
@@ -165,6 +184,18 @@ export default function ProjectLayout({
                 >
                   <SquareKanban className="size-3.5" />
                   Tasks
+                </Button>
+                <Button
+                  variant={resolvedView === "documents" ? "secondary" : "ghost"}
+                  size="xs"
+                  onClick={handleNavigateToDocuments}
+                  className={cn(
+                    "h-6 gap-1.5 rounded-md px-2 text-xs",
+                    resolvedView !== "documents" && "text-muted-foreground",
+                  )}
+                >
+                  <FileText className="size-3.5" />
+                  {t("documents:title")}
                 </Button>
                 <Button
                   variant={resolvedView === "gantt" ? "secondary" : "ghost"}

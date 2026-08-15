@@ -2121,5 +2121,31 @@
 		"branding": {
 			"poweredBy": "Powered by"
 		}
+	},
+	"documents": {
+		"title": "Documents",
+		"pageTitle": "{{name}} – Documents",
+		"new": "New document",
+		"untitled": "Untitled document",
+		"titlePlaceholder": "Document title",
+		"contentPlaceholder": "Write in Markdown…",
+		"save": "Save",
+		"saving": "Saving…",
+		"delete": "Delete",
+		"deleteConfirmTitle": "Delete this document?",
+		"deleteConfirmBody": "The document is archived and disappears from the list. This cannot be undone from the UI.",
+		"cancel": "Cancel",
+		"updatedAt": "Updated {{when}}",
+		"empty": {
+			"title": "No documents yet",
+			"subtitle": "Create a document to keep protocols, notes, and decisions next to the work."
+		},
+		"errors": {
+			"loadFailed": "Could not load documents.",
+			"createFailed": "Could not create the document.",
+			"saveFailed": "Could not save the document.",
+			"deleteFailed": "Could not delete the document.",
+			"conflict": "Someone else saved this document first. Reload to see their version — your unsaved edits will be lost."
+		}
 	}
 }
