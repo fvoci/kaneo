@@ -14,31 +14,6 @@ import { validateWorkspaceAccess } from "./validate-workspace-access";
  */
 export type DocumentAction = "read" | "create" | "update" | "delete";
 
-async function readJsonObjectBody(
-  c: Context,
-): Promise<Record<string, unknown>> {
-  const raw = (await c.req.json().catch(() => ({}))) || {};
-  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
-    return {};
-  }
-  return raw as Record<string, unknown>;
-}
-
-/**
- * Only the path param and the JSON body are accepted. Reading the id from the
- * query string would let a caller authorize against one resource
- * (`?id=<mine>`) while the handler acted on another (`{"id": "<theirs>"}`) —
- * the same hole `workspace-access-middleware` documents.
- */
-async function resolveId(c: Context, idKey: string): Promise<string | null> {
-  const fromParam = c.req.param(idKey);
-  if (fromParam) return fromParam;
-
-  const body = await readJsonObjectBody(c);
-  const fromBody = body[idKey];
-  return typeof fromBody === "string" && fromBody ? fromBody : null;
-}
-
 async function workspaceIdForDocument(
   documentId: string,
 ): Promise<string | null> {
@@ -93,7 +68,12 @@ function documentAccessMiddleware(
       throw new HTTPException(401, { message: "Unauthorized" });
     }
 
-    const id = await resolveId(c, idKey);
+    // The path param, and nothing else. Resolving from the query string or the
+    // body would let a caller authorize against one resource while the handler
+    // acted on another — and every handler here reads its id from the path, so
+    // any other source could only ever disagree with it. A future body-only
+    // route fails closed with this 400 rather than being authorized silently.
+    const id = c.req.param(idKey);
     if (!id) {
       throw new HTTPException(400, {
         message: `Missing ${idKey}`,
