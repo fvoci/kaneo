@@ -2158,6 +2158,18 @@
 		"backlinks": {
 			"title": "Referenced by",
 			"empty": "No documents reference this task yet."
+		},
+		"references": {
+			"title": "Referensi",
+			"add": "Tautkan tugas",
+			"empty": "Belum ada tugas yang dirujuk.",
+			"openTask": "Buka tugas",
+			"remove": "Hapus referensi",
+			"tasksInProject": "Tugas dalam proyek",
+			"searchPlaceholder": "Cari tugas untuk ditautkan...",
+			"noTasksFound": "Tugas tidak ditemukan",
+			"linkFailed": "Tidak dapat menautkan tugas.",
+			"unlinkFailed": "Tidak dapat menghapus referensi."
 		}
 	}
 }

@@ -2158,6 +2158,18 @@
 		"backlinks": {
 			"title": "Referenced by",
 			"empty": "No documents reference this task yet."
+		},
+		"references": {
+			"title": "Tham chiếu",
+			"add": "Liên kết công việc",
+			"empty": "Chưa có công việc nào được tham chiếu.",
+			"openTask": "Mở công việc",
+			"remove": "Gỡ tham chiếu",
+			"tasksInProject": "Công việc trong dự án",
+			"searchPlaceholder": "Tìm công việc để liên kết...",
+			"noTasksFound": "Không tìm thấy công việc nào",
+			"linkFailed": "Không thể liên kết công việc.",
+			"unlinkFailed": "Không thể gỡ tham chiếu."
 		}
 	}
 }

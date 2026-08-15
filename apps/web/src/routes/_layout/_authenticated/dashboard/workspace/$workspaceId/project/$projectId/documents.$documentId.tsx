@@ -85,6 +85,7 @@ function RouteComponent() {
       isSaving={updateDocument.isPending}
       isDeleting={deleteDocument.isPending}
       conflictVersion={conflictVersion}
+      workspaceId={workspaceId}
       onSave={handleSave}
       onDelete={handleDelete}
       onReloadAfterConflict={handleReloadAfterConflict}

@@ -2158,6 +2158,18 @@
 		"backlinks": {
 			"title": "Referenced by",
 			"empty": "No documents reference this task yet."
+		},
+		"references": {
+			"title": "Referencias",
+			"add": "Vincular una tarea",
+			"empty": "Aún no hay tareas referenciadas.",
+			"openTask": "Abrir tarea",
+			"remove": "Eliminar referencia",
+			"tasksInProject": "Tareas en el proyecto",
+			"searchPlaceholder": "Buscar tareas para vincular...",
+			"noTasksFound": "No se han encontrado tareas",
+			"linkFailed": "No se pudo vincular la tarea.",
+			"unlinkFailed": "No se pudo eliminar la referencia."
 		}
 	}
 }

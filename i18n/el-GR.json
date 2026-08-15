@@ -2158,6 +2158,18 @@
 		"backlinks": {
 			"title": "Referenced by",
 			"empty": "No documents reference this task yet."
+		},
+		"references": {
+			"title": "Αναφορές",
+			"add": "Σύνδεση εργασίας",
+			"empty": "Δεν υπάρχουν ακόμη αναφορές σε εργασίες.",
+			"openTask": "Άνοιγμα εργασίας",
+			"remove": "Αφαίρεση αναφοράς",
+			"tasksInProject": "Εργασίες στο έργο",
+			"searchPlaceholder": "Αναζήτηση εργασιών για σύνδεση...",
+			"noTasksFound": "Δεν βρέθηκαν εργασίες",
+			"linkFailed": "Δεν ήταν δυνατή η σύνδεση της εργασίας.",
+			"unlinkFailed": "Δεν ήταν δυνατή η αφαίρεση της αναφοράς."
 		}
 	}
 }

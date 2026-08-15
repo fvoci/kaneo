@@ -2172,6 +2172,18 @@
 		"backlinks": {
 			"title": "Referenced by",
 			"empty": "No documents reference this task yet."
+		},
+		"references": {
+			"title": "Посилання",
+			"add": "Пов'язати завдання",
+			"empty": "Ще немає пов'язаних завдань.",
+			"openTask": "Відкрити завдання",
+			"remove": "Видалити посилання",
+			"tasksInProject": "Завдання в проєкті",
+			"searchPlaceholder": "Пошук завдань для зв'язування...",
+			"noTasksFound": "Завдання не знайдено",
+			"linkFailed": "Не вдалося пов'язати завдання.",
+			"unlinkFailed": "Не вдалося видалити посилання."
 		}
 	}
 }

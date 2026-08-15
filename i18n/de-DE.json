@@ -2158,6 +2158,18 @@
 		"backlinks": {
 			"title": "Referenced by",
 			"empty": "No documents reference this task yet."
+		},
+		"references": {
+			"title": "Verweise",
+			"add": "Aufgabe verknüpfen",
+			"empty": "Noch keine Aufgaben referenziert.",
+			"openTask": "Aufgabe öffnen",
+			"remove": "Verweis entfernen",
+			"tasksInProject": "Aufgaben im Projekt",
+			"searchPlaceholder": "Aufgaben zum Verknüpfen suchen...",
+			"noTasksFound": "Keine Aufgaben gefunden",
+			"linkFailed": "Die Aufgabe konnte nicht verknüpft werden.",
+			"unlinkFailed": "Der Verweis konnte nicht entfernt werden."
 		}
 	}
 }

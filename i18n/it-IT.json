@@ -2158,6 +2158,18 @@
 		"backlinks": {
 			"title": "Referenced by",
 			"empty": "No documents reference this task yet."
+		},
+		"references": {
+			"title": "Riferimenti",
+			"add": "Collega un'attività",
+			"empty": "Nessuna attività ancora referenziata.",
+			"openTask": "Apri attività",
+			"remove": "Rimuovi riferimento",
+			"tasksInProject": "Attività nel progetto",
+			"searchPlaceholder": "Cerca attività da collegare...",
+			"noTasksFound": "Nessuna attività trovata",
+			"linkFailed": "Impossibile collegare l'attività.",
+			"unlinkFailed": "Impossibile rimuovere il riferimento."
 		}
 	}
 }

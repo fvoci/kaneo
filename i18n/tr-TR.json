@@ -2158,6 +2158,18 @@
 		"backlinks": {
 			"title": "Referenced by",
 			"empty": "No documents reference this task yet."
+		},
+		"references": {
+			"title": "Referanslar",
+			"add": "Görev bağla",
+			"empty": "Henüz referans verilen görev yok.",
+			"openTask": "Talebi aç",
+			"remove": "Referansı kaldır",
+			"tasksInProject": "Projedeki talepler",
+			"searchPlaceholder": "Bağlanacak talep ara...",
+			"noTasksFound": "Talep bulunamadı",
+			"linkFailed": "Görev bağlanamadı.",
+			"unlinkFailed": "Referans kaldırılamadı."
 		}
 	}
 }

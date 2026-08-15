@@ -8509,6 +8509,54 @@
 						}
 					},
 					"required": ["title", "empty"]
+				},
+				"references": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"add": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"openTask": {
+							"type": "string"
+						},
+						"remove": {
+							"type": "string"
+						},
+						"tasksInProject": {
+							"type": "string"
+						},
+						"searchPlaceholder": {
+							"type": "string"
+						},
+						"noTasksFound": {
+							"type": "string"
+						},
+						"linkFailed": {
+							"type": "string"
+						},
+						"unlinkFailed": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"add",
+						"empty",
+						"openTask",
+						"remove",
+						"tasksInProject",
+						"searchPlaceholder",
+						"noTasksFound",
+						"linkFailed",
+						"unlinkFailed"
+					]
 				}
 			},
 			"required": [
@@ -8529,7 +8577,8 @@
 				"errors",
 				"conflict",
 				"sourceMode",
-				"backlinks"
+				"backlinks",
+				"references"
 			]
 		}
 	},

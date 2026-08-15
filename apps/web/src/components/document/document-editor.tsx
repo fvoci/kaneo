@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import DocumentBodyEditor from "@/components/document/document-body-editor";
 import DocumentConflictBanner from "@/components/document/document-conflict-banner";
+import DocumentTaskReferences from "@/components/document/document-task-references";
 import {
   AlertDialog,
   AlertDialogClose,
@@ -22,6 +23,7 @@ type DocumentEditorProps = {
   isSaving: boolean;
   isDeleting: boolean;
   conflictVersion: number | null;
+  workspaceId: string;
   onSave: (draft: { title: string; content: string; version: number }) => void;
   onDelete: () => void;
   onReloadAfterConflict: () => void;
@@ -32,6 +34,7 @@ export default function DocumentEditor({
   isSaving,
   isDeleting,
   conflictVersion,
+  workspaceId,
   onSave,
   onDelete,
   onReloadAfterConflict,
@@ -133,6 +136,15 @@ export default function DocumentEditor({
             placeholder={t("documents:contentPlaceholder")}
           />
         )}
+
+        {/* Below the body, mirroring where a task keeps its relations. */}
+        <div className="mt-6 border-border/60 border-t pt-4">
+          <DocumentTaskReferences
+            documentId={document.id}
+            projectId={document.projectId}
+            workspaceId={workspaceId}
+          />
+        </div>
       </div>
 
       <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>

@@ -2158,6 +2158,18 @@
 		"backlinks": {
 			"title": "Referenced by",
 			"empty": "No documents reference this task yet."
+		},
+		"references": {
+			"title": "Референци",
+			"add": "Поврзи задача",
+			"empty": "Сè уште нема референцирани задачи.",
+			"openTask": "Отвори задача",
+			"remove": "Отстрани референца",
+			"tasksInProject": "Задачи во проект",
+			"searchPlaceholder": "Пребарај задачи за поврзување...",
+			"noTasksFound": "Не се пронајдени задачи",
+			"linkFailed": "Задачата не можеше да се поврзе.",
+			"unlinkFailed": "Референцата не можеше да се отстрани."
 		}
 	}
 }

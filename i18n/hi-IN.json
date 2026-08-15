@@ -2158,6 +2158,18 @@
 		"backlinks": {
 			"title": "Referenced by",
 			"empty": "No documents reference this task yet."
+		},
+		"references": {
+			"title": "संदर्भ",
+			"add": "कार्य लिंक करें",
+			"empty": "अभी तक कोई कार्य संदर्भित नहीं है।",
+			"openTask": "कार्य खोलें",
+			"remove": "संदर्भ हटाएं",
+			"tasksInProject": "प्रोजेक्ट में कार्य",
+			"searchPlaceholder": "लिंक करने के लिए कार्य खोजें...",
+			"noTasksFound": "कोई कार्य नहीं मिला",
+			"linkFailed": "कार्य लिंक नहीं किया जा सका।",
+			"unlinkFailed": "संदर्भ हटाया नहीं जा सका।"
 		}
 	}
 }

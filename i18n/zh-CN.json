@@ -2158,6 +2158,18 @@
 		"backlinks": {
 			"title": "Referenced by",
 			"empty": "No documents reference this task yet."
+		},
+		"references": {
+			"title": "引用",
+			"add": "关联任务",
+			"empty": "尚未引用任何任务。",
+			"openTask": "打开任务",
+			"remove": "移除引用",
+			"tasksInProject": "项目内任务",
+			"searchPlaceholder": "搜索要关联的任务…",
+			"noTasksFound": "未找到任务",
+			"linkFailed": "无法关联该任务。",
+			"unlinkFailed": "无法移除该引用。"
 		}
 	}
 }

@@ -2158,6 +2158,18 @@
 		"backlinks": {
 			"title": "Referenced by",
 			"empty": "No documents reference this task yet."
+		},
+		"references": {
+			"title": "Verwijzingen",
+			"add": "Taak koppelen",
+			"empty": "Nog geen taken waarnaar wordt verwezen.",
+			"openTask": "Taak openen",
+			"remove": "Verwijzing verwijderen",
+			"tasksInProject": "Taken in project",
+			"searchPlaceholder": "Zoek taken om te koppelen...",
+			"noTasksFound": "Geen taken gevonden",
+			"linkFailed": "Kon de taak niet koppelen.",
+			"unlinkFailed": "Kon de verwijzing niet verwijderen."
 		}
 	}
 }

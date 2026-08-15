@@ -2158,6 +2158,18 @@
 		"backlinks": {
 			"title": "Referenced by",
 			"empty": "No documents reference this task yet."
+		},
+		"references": {
+			"title": "References",
+			"add": "Link a task",
+			"empty": "No tasks referenced yet.",
+			"openTask": "Open task",
+			"remove": "Remove reference",
+			"tasksInProject": "Tasks in project",
+			"searchPlaceholder": "Search tasks to link...",
+			"noTasksFound": "No tasks found",
+			"linkFailed": "Could not link the task.",
+			"unlinkFailed": "Could not remove the reference."
 		}
 	}
 }

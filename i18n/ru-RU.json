@@ -2228,6 +2228,18 @@
 		"backlinks": {
 			"title": "Referenced by",
 			"empty": "No documents reference this task yet."
+		},
+		"references": {
+			"title": "Ссылки",
+			"add": "Связать задачу",
+			"empty": "Пока нет связанных задач.",
+			"openTask": "Открыть задачу",
+			"remove": "Удалить ссылку",
+			"tasksInProject": "Задачи в проекте",
+			"searchPlaceholder": "Поиск задач для связывания...",
+			"noTasksFound": "Задачи не найдены",
+			"linkFailed": "Не удалось связать задачу.",
+			"unlinkFailed": "Не удалось удалить ссылку."
 		}
 	}
 }

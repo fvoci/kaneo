@@ -46,6 +46,10 @@ vi.mock("@/components/activity/comment-editor", () => ({
   ),
 }));
 
+vi.mock("@/components/document/document-task-references", () => ({
+  default: () => <div data-testid="task-references" />,
+}));
+
 import DocumentEditor from "@/components/document/document-editor";
 
 function makeDocument(overrides: Record<string, unknown> = {}) {
@@ -77,6 +81,7 @@ function renderEditor(
       isSaving={false}
       isDeleting={false}
       conflictVersion={null}
+      workspaceId="w1"
       onSave={onSave}
       onDelete={vi.fn()}
       onReloadAfterConflict={vi.fn()}
@@ -194,6 +199,7 @@ describe("DocumentEditor save wiring", () => {
           isSaving={false}
           isDeleting={false}
           conflictVersion={9}
+          workspaceId="w1"
           onSave={onSave}
           onDelete={vi.fn()}
           onReloadAfterConflict={vi.fn()}
