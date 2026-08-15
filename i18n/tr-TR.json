@@ -2156,6 +2156,9 @@
 			"enter": "Edit Markdown source",
 			"exit": "Back to rich text"
 		},
+		"mermaid": {
+			"renderFailed": "Mermaid diyagramı oluşturulamadı"
+		},
 		"backlinks": {
 			"title": "Referenced by",
 			"add": "Belge bağla",

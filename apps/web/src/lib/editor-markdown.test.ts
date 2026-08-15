@@ -223,6 +223,26 @@ describe("extension sets are well formed", () => {
     expect(duplicates(createDocumentExtensions())).toEqual([]);
   });
 
+  const names = (extensions: AnyExtension[]) =>
+    new Set(extensions.map((extension) => extension.name));
+
+  // Round-tripping a mermaid fence proves nothing about this: the fence is an
+  // ordinary code block and survives with or without the extension. What the
+  // extension decides is whether the diagram is ever drawn, so assert its
+  // presence directly.
+  it("draws mermaid previews on both surfaces", () => {
+    expect(names(createEditorExtensions())).toContain("mermaidBlock");
+    expect(names(createDocumentExtensions())).toContain("mermaidBlock");
+  });
+
+  // Uploads have no home on the document surface yet, so the nodes an upload
+  // would create stay out of the schema.
+  it("keeps upload-only nodes off the document surface", () => {
+    const documentNames = names(createDocumentExtensions());
+    expect(documentNames).not.toContain("image");
+    expect(documentNames).not.toContain("attachmentCard");
+  });
+
   it("keeps link configured on both surfaces", () => {
     for (const html of [
       htmlFor(createEditorExtensions(), "[a](https://example.com)"),
@@ -289,6 +309,43 @@ describe("document surface", () => {
     expect(once).toContain("4℃");
     expect(docTrip(md, 4)).toBe(once);
     expect(htmlFor(createDocumentExtensions(), md)).toContain("<table");
+  });
+
+  it("keeps a mermaid fence exactly as written", () => {
+    // Mermaid is a decoration over a fenced code block, not a node of its own,
+    // so what is stored is whatever the code block serializes. A document that
+    // holds a diagram must reopen with the same source, or the diagram is a
+    // different diagram.
+    const md = "```mermaid\ngraph TD;\n  A[시작] --> B[끝];\n```";
+    expectDocLossless(md);
+  });
+
+  it("keeps the arrows and labels a diagram is made of", () => {
+    // The characters most at risk of being escaped on the way out.
+    const md =
+      "```mermaid\nsequenceDiagram\n  A->>B: 요청 <있음>\n  B-->>A: 응답 & 종료\n```";
+    const once = docTrip(md);
+    expect(once).toContain("A->>B: 요청 <있음>");
+    expect(once).toContain("B-->>A: 응답 & 종료");
+    expect(docTrip(md, 4)).toBe(once);
+  });
+
+  it("does not turn a mermaid fence into anything but a code block", () => {
+    // The preview is a widget decoration; it must never become stored content.
+    const html = htmlFor(
+      createDocumentExtensions(),
+      "```mermaid\ngraph TD;\n  A --> B;\n```",
+    );
+    expect(html).toContain("<pre");
+    expect(html).toContain("graph TD;");
+    expect(html).not.toContain("kaneo-mermaid-preview");
+  });
+
+  it("keeps a mermaid fence on the comment surface too", () => {
+    // Both surfaces carry MermaidBlock, so a diagram pasted into a comment
+    // stores the same text a document would.
+    const md = "```mermaid\ngraph TD;\n  A --> B;\n```";
+    expect(roundTripWith(createEditorExtensions(), md, 4)).toBe(md.trim());
   });
 
   it("keeps blockquotes, lists and checklists", () => {

@@ -129,11 +129,16 @@ export function createEditorExtensions({
  * Wiki documents are long-form, so they allow the full heading range instead of
  * the h1-h3 that comments are limited to.
  *
- * Image, MermaidBlock and AttachmentCard are left out: uploads belong to a
- * later phase, and a node that cannot be created is one less thing that can
- * appear in stored Markdown. EmbedBlock stays because the paste handler offers
- * an embed for video URLs, and dropping the node would leave that choice
- * silently doing nothing.
+ * Image and AttachmentCard are left out: uploads belong to a later phase, and a
+ * node that cannot be created is one less thing that can appear in stored
+ * Markdown. EmbedBlock stays because the paste handler offers an embed for
+ * video URLs, and dropping the node would leave that choice silently doing
+ * nothing.
+ *
+ * MermaidBlock is not in that group. It defines no node — it draws a preview
+ * beside a fenced code block whose language is `mermaid` — so it adds nothing
+ * to what gets stored. Leaving it out only meant a document could hold a
+ * mermaid fence that never rendered.
  */
 export function createDocumentExtensions({
   readOnly = false,
@@ -166,6 +171,9 @@ export function createDocumentExtensions({
       resolveLanguage: toShikiLanguage,
       themeDark: "github-dark",
       themeLight: "github-light",
+    }),
+    MermaidBlock.configure({
+      errorKey: "documents:mermaid.renderFailed",
     }),
     EmbedBlock,
     KaneoIssueLink,

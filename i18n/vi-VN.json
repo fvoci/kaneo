@@ -2156,6 +2156,9 @@
 			"enter": "Edit Markdown source",
 			"exit": "Back to rich text"
 		},
+		"mermaid": {
+			"renderFailed": "Không thể hiển thị sơ đồ Mermaid"
+		},
 		"backlinks": {
 			"title": "Referenced by",
 			"add": "Liên kết tài liệu",

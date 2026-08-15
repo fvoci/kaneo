@@ -2156,6 +2156,9 @@
 			"enter": "마크다운 원문 편집",
 			"exit": "서식 편집으로 돌아가기"
 		},
+		"mermaid": {
+			"renderFailed": "Mermaid 다이어그램을 렌더링하지 못했습니다"
+		},
 		"backlinks": {
 			"title": "이 태스크를 참조하는 문서",
 			"add": "문서 연결",

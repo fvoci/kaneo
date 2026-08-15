@@ -8500,6 +8500,16 @@
 					},
 					"required": ["enter", "exit"]
 				},
+				"mermaid": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"renderFailed": {
+							"type": "string"
+						}
+					},
+					"required": ["renderFailed"]
+				},
 				"backlinks": {
 					"type": "object",
 					"additionalProperties": false,
@@ -8616,6 +8626,7 @@
 				"errors",
 				"conflict",
 				"sourceMode",
+				"mermaid",
 				"backlinks",
 				"references"
 			]

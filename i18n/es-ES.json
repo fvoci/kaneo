@@ -2156,6 +2156,9 @@
 			"enter": "Edit Markdown source",
 			"exit": "Back to rich text"
 		},
+		"mermaid": {
+			"renderFailed": "No se pudo renderizar el diagrama de Mermaid"
+		},
 		"backlinks": {
 			"title": "Referenced by",
 			"add": "Vincular un documento",

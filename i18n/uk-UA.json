@@ -2170,6 +2170,9 @@
 			"enter": "Edit Markdown source",
 			"exit": "Back to rich text"
 		},
+		"mermaid": {
+			"renderFailed": "Не вдалося відобразити діаграму Mermaid"
+		},
 		"backlinks": {
 			"title": "Referenced by",
 			"add": "Пов'язати документ",

@@ -2156,6 +2156,9 @@
 			"enter": "Edit Markdown source",
 			"exit": "Back to rich text"
 		},
+		"mermaid": {
+			"renderFailed": "Mermaid дијаграмот не можеше да се прикаже"
+		},
 		"backlinks": {
 			"title": "Referenced by",
 			"add": "Поврзи документ",

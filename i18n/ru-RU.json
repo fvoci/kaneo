@@ -2226,6 +2226,9 @@
 			"enter": "Edit Markdown source",
 			"exit": "Back to rich text"
 		},
+		"mermaid": {
+			"renderFailed": "Не удалось отобразить диаграмму Mermaid"
+		},
 		"backlinks": {
 			"title": "Referenced by",
 			"add": "Связать документ",

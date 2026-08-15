@@ -2156,6 +2156,9 @@
 			"enter": "Edit Markdown source",
 			"exit": "Back to rich text"
 		},
+		"mermaid": {
+			"renderFailed": "Mermaid आरेख प्रस्तुत नहीं किया जा सका"
+		},
 		"backlinks": {
 			"title": "Referenced by",
 			"add": "दस्तावेज़ लिंक करें",

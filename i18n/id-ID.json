@@ -2156,6 +2156,9 @@
 			"enter": "Edit Markdown source",
 			"exit": "Back to rich text"
 		},
+		"mermaid": {
+			"renderFailed": "Diagram Mermaid tidak dapat dirender"
+		},
 		"backlinks": {
 			"title": "Referenced by",
 			"add": "Tautkan dokumen",
