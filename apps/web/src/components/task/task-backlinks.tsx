@@ -55,9 +55,12 @@ export default function TaskBacklinks({
           {documents.map((document) => (
             <li key={document.id}>
               <Link
-                to="/dashboard/workspace/$workspaceId/project/$projectId/documents"
-                params={{ workspaceId, projectId: document.projectId }}
-                search={{ documentId: document.id }}
+                to="/dashboard/workspace/$workspaceId/project/$projectId/documents/$documentId"
+                params={{
+                  workspaceId,
+                  projectId: document.projectId,
+                  documentId: document.id,
+                }}
                 className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-accent/50"
               >
                 <FileText className="size-3.5 shrink-0 text-muted-foreground" />

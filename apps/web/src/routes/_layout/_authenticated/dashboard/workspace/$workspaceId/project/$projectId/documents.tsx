@@ -1,131 +1,66 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Outlet,
+  useNavigate,
+  useParams,
+} from "@tanstack/react-router";
 import { Plus } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import ProjectLayout from "@/components/common/project-layout";
-import DocumentEditor from "@/components/document/document-editor";
 import DocumentEmptyState from "@/components/document/document-empty-state";
 import DocumentList from "@/components/document/document-list";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
-import { DocumentVersionConflictError } from "@/fetchers/document/update-document";
 import useCreateDocument from "@/hooks/mutations/document/use-create-document";
-import useDeleteDocument from "@/hooks/mutations/document/use-delete-document";
-import useUpdateDocument from "@/hooks/mutations/document/use-update-document";
-import { useGetDocument } from "@/hooks/queries/document/use-get-document";
 import { useGetDocuments } from "@/hooks/queries/document/use-get-documents";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import { toast } from "@/lib/toast";
-
-type DocumentsSearchParams = {
-  documentId?: string;
-};
 
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/documents",
 )({
   component: RouteComponent,
-  validateSearch: (search: Record<string, unknown>): DocumentsSearchParams => ({
-    documentId:
-      typeof search.documentId === "string" ? search.documentId : undefined,
-  }),
 });
 
+/**
+ * Shell for the documents view: the project chrome and the list of documents.
+ * Which document is open is a path parameter handled by the child route, so a
+ * document has a URL that survives a reload and can be linked to.
+ */
 function RouteComponent() {
   const { t } = useTranslation();
   const { projectId, workspaceId } = Route.useParams();
-  const { documentId } = Route.useSearch();
   const navigate = useNavigate();
 
   const { data: project } = useGetProject({ id: projectId, workspaceId });
   const { data: documents, isLoading, isError } = useGetDocuments(projectId);
-  const { data: selectedDocument } = useGetDocument(documentId);
-
-  const queryClient = useQueryClient();
   const createDocument = useCreateDocument();
-  const updateDocument = useUpdateDocument(projectId);
-  const deleteDocument = useDeleteDocument(projectId);
-
-  // Server version seen in the last 409, or null when there is no conflict.
-  const [conflictVersion, setConflictVersion] = useState<number | null>(null);
-
-  // Switching documents starts from a clean slate; a conflict belongs to the
-  // document that produced it.
-  const selectDocument = useCallback(
-    (nextId: string | undefined) => {
-      setConflictVersion(null);
-      void navigate({
-        to: "/dashboard/workspace/$workspaceId/project/$projectId/documents",
-        params: { workspaceId, projectId },
-        search: nextId ? { documentId: nextId } : {},
-      });
-    },
-    [navigate, workspaceId, projectId],
-  );
-
-  // Keep the selection pointing at something that still exists: on first load,
-  // and after a delete removes the open document.
-  useEffect(() => {
-    if (!documents || documents.length === 0) return;
-    const stillExists =
-      documentId && documents.some((document) => document.id === documentId);
-    if (!stillExists) {
-      selectDocument(documents[0]?.id);
-    }
-  }, [documents, documentId, selectDocument]);
 
   useEffect(() => {
     if (isError) toast.error(t("documents:errors.loadFailed"));
   }, [isError, t]);
 
+  const openDocument = (documentId: string) => {
+    void navigate({
+      to: "/dashboard/workspace/$workspaceId/project/$projectId/documents/$documentId",
+      params: { workspaceId, projectId, documentId },
+    });
+  };
+
   const handleCreate = () => {
     createDocument.mutate(
       { projectId, title: t("documents:untitled"), content: "" },
       {
-        onSuccess: (created) => selectDocument(created.id),
+        onSuccess: (created) => openDocument(created.id),
         onError: () => toast.error(t("documents:errors.createFailed")),
       },
     );
   };
 
-  const handleSave = (draft: {
-    title: string;
-    content: string;
-    version: number;
-    taskIds: string[];
-  }) => {
-    if (!documentId) return;
-    updateDocument.mutate(
-      { id: documentId, ...draft },
-      {
-        onSuccess: () => setConflictVersion(null),
-        onError: (error) => {
-          if (error instanceof DocumentVersionConflictError) {
-            // Surface the conflict in a banner and keep the draft intact.
-            setConflictVersion(error.currentVersion);
-            return;
-          }
-          toast.error(t("documents:errors.saveFailed"));
-        },
-      },
-    );
-  };
-
-  // Only an explicit reload replaces the draft with the server copy.
-  const handleReloadAfterConflict = () => {
-    setConflictVersion(null);
-    void queryClient.invalidateQueries({ queryKey: ["document", documentId] });
-    void queryClient.invalidateQueries({ queryKey: ["documents", projectId] });
-  };
-
-  const handleDelete = () => {
-    if (!documentId) return;
-    deleteDocument.mutate(documentId, {
-      onSuccess: () => selectDocument(undefined),
-      onError: () => toast.error(t("documents:errors.deleteFailed")),
-    });
-  };
+  // The open document lives in the child route's params; `strict: false` reads
+  // them from the deepest match without this route having to declare them.
+  const { documentId: selectedId } = useParams({ strict: false });
 
   const hasDocuments = (documents?.length ?? 0) > 0;
 
@@ -156,22 +91,11 @@ function RouteComponent() {
             <aside className="w-64 shrink-0 overflow-auto border-border/80 border-r">
               <DocumentList
                 documents={documents ?? []}
-                selectedId={documentId}
-                onSelect={selectDocument}
+                selectedId={selectedId}
+                onSelect={openDocument}
               />
             </aside>
-            {selectedDocument ? (
-              <DocumentEditor
-                key={selectedDocument.id}
-                document={selectedDocument}
-                isSaving={updateDocument.isPending}
-                isDeleting={deleteDocument.isPending}
-                conflictVersion={conflictVersion}
-                onSave={handleSave}
-                onDelete={handleDelete}
-                onReloadAfterConflict={handleReloadAfterConflict}
-              />
-            ) : null}
+            <Outlet />
           </div>
         ) : (
           <DocumentEmptyState
