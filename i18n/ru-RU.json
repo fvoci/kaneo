@@ -2216,6 +2216,14 @@
 		"title": "Documents",
 		"titlePlaceholder": "Document title",
 		"untitled": "Untitled document",
-		"updatedAt": "Updated {{when}}"
+		"updatedAt": "Updated {{when}}",
+		"conflict": {
+			"message": "Someone saved a newer version (server v{{currentVersion}}, your edits are based on v{{myVersion}}). Your changes are still here — loading the latest version will replace them.",
+			"reload": "Load latest version"
+		},
+		"sourceMode": {
+			"enter": "Edit Markdown source",
+			"exit": "Back to rich text"
+		}
 	}
 }

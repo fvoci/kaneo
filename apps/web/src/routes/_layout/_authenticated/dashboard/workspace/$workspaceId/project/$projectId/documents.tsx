@@ -1,6 +1,7 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ProjectLayout from "@/components/common/project-layout";
 import DocumentEditor from "@/components/document/document-editor";
@@ -41,12 +42,19 @@ function RouteComponent() {
   const { data: documents, isLoading, isError } = useGetDocuments(projectId);
   const { data: selectedDocument } = useGetDocument(documentId);
 
+  const queryClient = useQueryClient();
   const createDocument = useCreateDocument();
   const updateDocument = useUpdateDocument(projectId);
   const deleteDocument = useDeleteDocument(projectId);
 
+  // Server version seen in the last 409, or null when there is no conflict.
+  const [conflictVersion, setConflictVersion] = useState<number | null>(null);
+
+  // Switching documents starts from a clean slate; a conflict belongs to the
+  // document that produced it.
   const selectDocument = useCallback(
     (nextId: string | undefined) => {
+      setConflictVersion(null);
       void navigate({
         to: "/dashboard/workspace/$workspaceId/project/$projectId/documents",
         params: { workspaceId, projectId },
@@ -90,15 +98,24 @@ function RouteComponent() {
     updateDocument.mutate(
       { id: documentId, ...draft },
       {
+        onSuccess: () => setConflictVersion(null),
         onError: (error) => {
           if (error instanceof DocumentVersionConflictError) {
-            toast.error(t("documents:errors.conflict"));
+            // Surface the conflict in a banner and keep the draft intact.
+            setConflictVersion(error.currentVersion);
             return;
           }
           toast.error(t("documents:errors.saveFailed"));
         },
       },
     );
+  };
+
+  // Only an explicit reload replaces the draft with the server copy.
+  const handleReloadAfterConflict = () => {
+    setConflictVersion(null);
+    void queryClient.invalidateQueries({ queryKey: ["document", documentId] });
+    void queryClient.invalidateQueries({ queryKey: ["documents", projectId] });
   };
 
   const handleDelete = () => {
@@ -148,8 +165,10 @@ function RouteComponent() {
                 document={selectedDocument}
                 isSaving={updateDocument.isPending}
                 isDeleting={deleteDocument.isPending}
+                conflictVersion={conflictVersion}
                 onSave={handleSave}
                 onDelete={handleDelete}
+                onReloadAfterConflict={handleReloadAfterConflict}
               />
             ) : null}
           </div>
