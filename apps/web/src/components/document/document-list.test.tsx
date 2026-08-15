@@ -22,7 +22,7 @@ const DOCUMENTS = [
     id: "d1",
     projectId: "p1",
     parentId: null,
-    position: "a0",
+    position: 0,
     number: 7,
     title: "프로토콜",
     createdAt: "2026-01-01T00:00:00.000Z",

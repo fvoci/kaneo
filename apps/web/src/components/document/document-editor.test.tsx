@@ -61,7 +61,7 @@ function makeDocument(overrides: Record<string, unknown> = {}) {
     id: "d1",
     projectId: "p1",
     parentId: null,
-    position: "a0",
+    position: 0,
     title: "제목",
     content: "",
     version: 1,

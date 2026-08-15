@@ -7,7 +7,7 @@ export const documentSchema = v.object({
   id: v.string(),
   projectId: v.string(),
   parentId: v.nullable(v.string()),
-  position: v.string(),
+  position: v.number(),
   number: v.number(),
   title: v.string(),
   content: v.nullable(v.string()),
@@ -33,7 +33,7 @@ export const documentSummarySchema = v.object({
   id: v.string(),
   projectId: v.string(),
   parentId: v.nullable(v.string()),
-  position: v.string(),
+  position: v.number(),
   number: v.number(),
   title: v.string(),
   createdAt: v.date(),
@@ -43,10 +43,10 @@ export const documentSummarySchema = v.object({
 export const documentListSchema = v.array(documentSummarySchema);
 
 /**
- * `parentId` and `position` are deliberately not accepted yet. The columns
- * exist so the tree (feature 3) lands without a migration, but until that
- * phase ships there is no cycle or sibling-ordering validation, so every
- * document is created as an unordered root.
+ * `parentId` and `position` are deliberately not accepted yet. Placing a
+ * document in the tree needs cycle and sibling-ordering validation that the
+ * reorder endpoint will own, so until then every document is created as an
+ * unranked root.
  */
 export const createDocumentSchema = v.object({
   title: v.pipe(

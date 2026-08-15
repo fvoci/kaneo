@@ -467,9 +467,13 @@ export const documentTable = pgTable(
         onUpdate: "cascade",
       },
     ),
-    // Fractional index: ordering keys are compared lexicographically so a
-    // reorder rewrites one row instead of renumbering every sibling.
-    position: text("position").notNull().default("a0"),
+    // Rank among siblings, the way `project.position` and `task.position` rank
+    // theirs. Integers rather than a fractional index: a text key is ordered
+    // lexicographically, and what "lexicographically" means depends on the
+    // server's collation, so the same rows sort differently on a musl build
+    // than on a glibc one. A reorder renumbers a sibling group instead of
+    // writing one row, which is the cost `reorderProjects` already accepts.
+    position: integer("position").notNull().default(0),
     // Human-readable identifier, rendered with the project slug as "P2-D1".
     // Claimed from `project.lastDocumentNumber`, never reused: an archived
     // document keeps its number so a reference to it stays meaningful.

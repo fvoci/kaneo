@@ -2,7 +2,7 @@ CREATE TABLE "document" (
 	"id" text PRIMARY KEY NOT NULL,
 	"project_id" text NOT NULL,
 	"parent_id" text,
-	"position" text DEFAULT 'a0' NOT NULL,
+	"position" integer DEFAULT 0 NOT NULL,
 	"number" integer NOT NULL,
 	"title" text NOT NULL,
 	"content" text,

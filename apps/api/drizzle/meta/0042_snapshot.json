@@ -1,5 +1,5 @@
 {
-	"id": "13c85a4f-e8dd-4335-a4cb-445fa4e64258",
+	"id": "b9515bb6-d2d3-461e-aa1a-b906a1f11b7d",
 	"prevId": "6ed5db76-6409-4440-81ab-7a38f6832db9",
 	"version": "7",
 	"dialect": "postgresql",
@@ -1240,10 +1240,10 @@
 				},
 				"position": {
 					"name": "position",
-					"type": "text",
+					"type": "integer",
 					"primaryKey": false,
 					"notNull": true,
-					"default": "'a0'"
+					"default": 0
 				},
 				"number": {
 					"name": "number",

@@ -3,10 +3,10 @@ import db from "../../database";
 import { documentTable } from "../../database/schema";
 
 /**
- * Flat list for a project, most recently edited first. Ordering by
- * `updatedAt` rather than `position` is deliberate: `position` is a fractional
- * index whose lexicographic ordering depends on the server collation, and no
- * ordering UI exists until the tree ships.
+ * Flat list for a project, most recently edited first. Still ordered by
+ * `updatedAt` rather than `position` because nothing assigns a position yet —
+ * every row holds the default. The switch belongs with the change that starts
+ * ranking siblings.
  */
 async function getDocuments(projectId: string) {
   return db
