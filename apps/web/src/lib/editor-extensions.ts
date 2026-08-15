@@ -47,18 +47,61 @@ export function normalizeMarkdown(markdown: string) {
     .replace(/\n{2,}$/g, "\n");
 }
 
+export type EditorSurface = "comment" | "document";
+
 export type EditorExtensionOptions = {
   readOnly?: boolean;
   placeholder?: string;
   getHighlighter?: () => Highlighter | null;
   getMentionMembers?: () => MentionMember[];
+  surface?: EditorSurface;
 };
 
 /**
+ * Everything a surface is allowed to differ by. Anything not listed here is
+ * shared, and deliberately so: the extension set decides which Markdown
+ * survives a parse/serialize round trip, so two hand-maintained lists would
+ * drift and silently change what gets persisted.
+ *
+ * `headingLevels`: wiki documents are long-form and allow the full range;
+ * comments stop at h3.
+ *
+ * `canUpload`: uploads belong to a later phase for documents, and a node that
+ * cannot be created is one less thing that can appear in stored Markdown.
+ * EmbedBlock is not in this group — the paste handler offers an embed for video
+ * URLs on both surfaces, and dropping the node would leave that choice silently
+ * doing nothing.
+ *
+ * MermaidBlock and BlockMath are not surface-specific and must never become so.
+ * Markdown tokenizers register globally, so once any editor carrying BlockMath
+ * exists, every later editor parses `$$...$$` into a blockMath node — and a
+ * surface whose schema lacks that node drops it, deleting the text. Registering
+ * it on one surface only meant a comment written after a document was opened
+ * lost its formula. MermaidBlock defines no node at all; it draws a preview
+ * beside a fenced code block, so leaving it out only meant a stored diagram
+ * never rendered.
+ */
+type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
+const SURFACES = {
+  comment: {
+    headingLevels: [1, 2, 3],
+    canUpload: true,
+    mermaidErrorKey: "activity:comment.editor.mermaid.renderFailed",
+  },
+  document: {
+    headingLevels: [1, 2, 3, 4, 5, 6],
+    canUpload: false,
+    mermaidErrorKey: "documents:mermaid.renderFailed",
+  },
+} satisfies Record<
+  EditorSurface,
+  { headingLevels: HeadingLevel[]; canUpload: boolean; mermaidErrorKey: string }
+>;
+
+/**
  * The single source of truth for the editor schema. Every surface that stores
- * Markdown must build its editor from here: the set of extensions decides
- * which Markdown survives a parse/serialize round trip, so a second, drifting
- * list would silently change what gets persisted.
+ * Markdown must build its editor from here.
  *
  * Maths is block-only, on purpose. The inline `$...$` tokenizer reads any two
  * dollars on a line as a formula, so "가격은 $100, 할인가 $80" parses as prose,
@@ -73,10 +116,13 @@ export function createEditorExtensions({
   placeholder = "",
   getHighlighter = () => null,
   getMentionMembers = () => [],
+  surface = "comment",
 }: EditorExtensionOptions = {}): AnyExtension[] {
+  const { headingLevels, canUpload, mermaidErrorKey } = SURFACES[surface];
+
   return [
     StarterKit.configure({
-      heading: { levels: [1, 2, 3] },
+      heading: { levels: headingLevels },
       trailingNode: false,
       codeBlock: {
         HTMLAttributes: { class: "kaneo-tiptap-codeblock" },
@@ -103,23 +149,30 @@ export function createEditorExtensions({
       themeLight: "github-light",
     }),
     MermaidBlock.configure({
-      errorKey: "activity:comment.editor.mermaid.renderFailed",
+      errorKey: mermaidErrorKey,
     }),
     BlockMath,
     EmbedBlock,
-    AttachmentCard,
+    // Both upload nodes stay at the position they were declared at before the
+    // two surfaces shared a builder: extension order decides ProseMirror's
+    // schema order, and schema order breaks ties between parse rules.
+    ...(canUpload ? [AttachmentCard] : []),
     KaneoIssueLink,
     KaneoMention,
     MentionSuggestion.configure({
       getMembers: getMentionMembers,
     }),
     TaskList,
-    Image.configure({
-      HTMLAttributes: {
-        class: "kaneo-editor-image",
-        loading: "lazy",
-      },
-    }),
+    ...(canUpload
+      ? [
+          Image.configure({
+            HTMLAttributes: {
+              class: "kaneo-editor-image",
+              loading: "lazy",
+            },
+          }),
+        ]
+      : []),
     TaskItemWithCheckbox.configure({
       nested: true,
     }),
@@ -135,81 +188,7 @@ export function createEditorExtensions({
   ];
 }
 
-/**
- * Wiki documents are long-form, so they allow the full heading range instead of
- * the h1-h3 that comments are limited to.
- *
- * Image and AttachmentCard are left out: uploads belong to a later phase, and a
- * node that cannot be created is one less thing that can appear in stored
- * Markdown. EmbedBlock stays because the paste handler offers an embed for
- * video URLs, and dropping the node would leave that choice silently doing
- * nothing.
- *
- * MermaidBlock is not in that group. It defines no node — it draws a preview
- * beside a fenced code block whose language is `mermaid` — so it adds nothing
- * to what gets stored. Leaving it out only meant a document could hold a
- * mermaid fence that never rendered.
- *
- * BlockMath is on both sets for the same reason. Markdown tokenizers register
- * globally, so once any editor carrying it exists, every later editor parses
- * `$$...$$` into a blockMath node — and a surface whose schema lacks that node
- * drops it, deleting the text. Registering it only here would mean a comment
- * written after a document was opened lost its formula.
- */
-export function createDocumentExtensions({
-  readOnly = false,
-  placeholder = "",
-  getHighlighter = () => null,
-  getMentionMembers = () => [],
-}: EditorExtensionOptions = {}): AnyExtension[] {
-  return [
-    StarterKit.configure({
-      heading: { levels: [1, 2, 3, 4, 5, 6] },
-      trailingNode: false,
-      codeBlock: {
-        HTMLAttributes: { class: "kaneo-tiptap-codeblock" },
-      },
-      link: {
-        autolink: true,
-        defaultProtocol: "https",
-        linkOnPaste: true,
-        openOnClick: readOnly,
-      },
-    }),
-    Markdown.configure({
-      markedOptions: {
-        breaks: true,
-        gfm: true,
-      },
-    }),
-    ShikiCodeBlock.configure({
-      highlighter: getHighlighter,
-      resolveLanguage: toShikiLanguage,
-      themeDark: "github-dark",
-      themeLight: "github-light",
-    }),
-    MermaidBlock.configure({
-      errorKey: "documents:mermaid.renderFailed",
-    }),
-    BlockMath,
-    EmbedBlock,
-    KaneoIssueLink,
-    KaneoMention,
-    MentionSuggestion.configure({
-      getMembers: getMentionMembers,
-    }),
-    TaskList,
-    TaskItemWithCheckbox.configure({
-      nested: true,
-    }),
-    Placeholder.configure({
-      placeholder,
-    }),
-    Table.configure({
-      resizable: true,
-    }),
-    TableRow,
-    TableHeader,
-    TableCell,
-  ];
-}
+export const createDocumentExtensions = (
+  options: EditorExtensionOptions = {},
+): AnyExtension[] =>
+  createEditorExtensions({ ...options, surface: "document" });

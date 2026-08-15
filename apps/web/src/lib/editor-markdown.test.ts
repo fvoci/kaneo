@@ -50,19 +50,8 @@ function htmlFor(extensions: AnyExtension[], markdown: string) {
   return html;
 }
 
-function roundTrip(markdown: string, times = 1) {
-  const editor = new Editor({ extensions: createEditorExtensions() });
-  let current = normalizeMarkdown(markdown);
-  for (let i = 0; i < times; i += 1) {
-    editor.commands.setContent(current, {
-      emitUpdate: false,
-      contentType: "markdown",
-    });
-    current = normalizeMarkdown(editor.getMarkdown());
-  }
-  editor.destroy();
-  return current.trim();
-}
+const roundTrip = (markdown: string, times = 1) =>
+  roundTripWith(createEditorExtensions(), markdown, times);
 
 function expectLossless(markdown: string) {
   const once = roundTrip(markdown, 1);
@@ -243,6 +232,34 @@ describe("extension sets are well formed", () => {
     expect(documentNames).not.toContain("attachmentCard");
   });
 
+  // The two surfaces share one builder, so a surface option is the only way
+  // they can diverge. Pin the entire divergence: anything that decides how
+  // Markdown parses — blockMath and the mermaid fence above all — must never
+  // become surface-specific, because a node missing from one schema is text
+  // deleted on that surface.
+  it("differs between the surfaces only by the upload nodes", () => {
+    const comment = names(createEditorExtensions());
+    const document = names(createDocumentExtensions());
+
+    expect([...comment].filter((name) => !document.has(name)).sort()).toEqual([
+      "attachmentCard",
+      "image",
+    ]);
+    expect([...document].filter((name) => !comment.has(name))).toEqual([]);
+  });
+
+  // Extension order becomes ProseMirror's schema order, which breaks ties
+  // between parse rules. Sharing a builder must not quietly reorder either set.
+  it("registers the shared extensions in the same order on both surfaces", () => {
+    const commentShared = createEditorExtensions()
+      .map((extension) => extension.name)
+      .filter((name) => name !== "image" && name !== "attachmentCard");
+
+    expect(commentShared).toEqual(
+      createDocumentExtensions().map((extension) => extension.name),
+    );
+  });
+
   it("registers block maths on both surfaces and inline maths on neither", () => {
     for (const set of [createEditorExtensions(), createDocumentExtensions()]) {
       expect(names(set)).toContain("blockMath");
@@ -421,11 +438,8 @@ describe("document surface", () => {
     expectDocLossless("- [ ] 할 일\n- [x] 완료");
   });
 
-  it("keeps fenced code blocks including a mermaid fence", () => {
+  it("keeps fenced code blocks", () => {
     expectDocLossless("```python\nprint('측정')\n```");
-    // MermaidBlock is not loaded here, so a mermaid fence stays a code block
-    // rather than a diagram — the source is preserved either way.
-    expectDocLossless("```mermaid\ngraph TD;\nA-->B;\n```");
   });
 
   it("keeps mention and issue-link nodes", () => {
