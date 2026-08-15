@@ -1,6 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import { relations, sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
   customType,
   foreignKey,
@@ -438,6 +439,62 @@ export const taskTable = pgTable(
     index("task_assigneeId_idx").on(table.userId),
     index("task_columnId_idx").on(table.columnId),
     unique("task_project_number_unique").on(table.projectId, table.number),
+  ],
+);
+
+export const documentTable = pgTable(
+  "document",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projectTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    // Self-reference needs an explicit return type or TypeScript reports a
+    // circular initializer. `set null` keeps a subtree alive when its parent
+    // is deleted rather than silently removing the descendants.
+    parentId: text("parent_id").references(
+      (): AnyPgColumn => documentTable.id,
+      {
+        onDelete: "set null",
+        onUpdate: "cascade",
+      },
+    ),
+    // Fractional index: ordering keys are compared lexicographically so a
+    // reorder rewrites one row instead of renumbering every sibling.
+    position: text("position").notNull().default("a0"),
+    title: text("title").notNull(),
+    content: text("content"),
+    // Optimistic concurrency. Writes carrying a stale version are rejected so
+    // two editors cannot silently overwrite each other.
+    version: integer("version").notNull().default(1),
+    createdBy: text("created_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    updatedBy: text("updated_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    archivedAt: timestamp("archived_at", { mode: "date" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("document_projectId_idx").on(table.projectId),
+    index("document_parentId_idx").on(table.parentId),
+    index("document_projectId_parentId_position_idx").on(
+      table.projectId,
+      table.parentId,
+      table.position,
+    ),
   ],
 );
 
@@ -978,6 +1035,36 @@ export const taskRelationTable = pgTable(
   (table) => [
     index("task_relation_source_idx").on(table.sourceTaskId),
     index("task_relation_target_idx").on(table.targetTaskId),
+  ],
+);
+
+export const documentTaskLinkTable = pgTable(
+  "document_task_link",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documentTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => taskTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("document_task_link_documentId_idx").on(table.documentId),
+    index("document_task_link_taskId_idx").on(table.taskId),
+    unique("document_task_link_document_task_unique").on(
+      table.documentId,
+      table.taskId,
+    ),
   ],
 );
 

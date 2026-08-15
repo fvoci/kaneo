@@ -6,6 +6,8 @@ import {
   assetTable,
   columnTable,
   commentTable,
+  documentTable,
+  documentTaskLinkTable,
   externalLinkTable,
   githubIntegrationTable,
   integrationTable,
@@ -108,6 +110,7 @@ export const projectTableRelations = relations(
     githubIntegration: many(githubIntegrationTable),
     integrations: many(integrationTable),
     notificationWorkspaceProjects: many(userNotificationWorkspaceProjectTable),
+    documents: many(documentTable),
   }),
 );
 
@@ -156,7 +159,49 @@ export const taskTableRelations = relations(taskTable, ({ one, many }) => ({
   sourceRelations: many(taskRelationTable, { relationName: "sourceTask" }),
   targetRelations: many(taskRelationTable, { relationName: "targetTask" }),
   remindersSent: many(taskReminderSentTable),
+  documentLinks: many(documentTaskLinkTable),
 }));
+
+export const documentTableRelations = relations(
+  documentTable,
+  ({ one, many }) => ({
+    project: one(projectTable, {
+      fields: [documentTable.projectId],
+      references: [projectTable.id],
+    }),
+    parent: one(documentTable, {
+      fields: [documentTable.parentId],
+      references: [documentTable.id],
+      relationName: "documentParent",
+    }),
+    children: many(documentTable, { relationName: "documentParent" }),
+    creator: one(userTable, {
+      fields: [documentTable.createdBy],
+      references: [userTable.id],
+      relationName: "documentCreator",
+    }),
+    updater: one(userTable, {
+      fields: [documentTable.updatedBy],
+      references: [userTable.id],
+      relationName: "documentUpdater",
+    }),
+    taskLinks: many(documentTaskLinkTable),
+  }),
+);
+
+export const documentTaskLinkTableRelations = relations(
+  documentTaskLinkTable,
+  ({ one }) => ({
+    document: one(documentTable, {
+      fields: [documentTaskLinkTable.documentId],
+      references: [documentTable.id],
+    }),
+    task: one(taskTable, {
+      fields: [documentTaskLinkTable.taskId],
+      references: [taskTable.id],
+    }),
+  }),
+);
 
 export const timeEntryTableRelations = relations(timeEntryTable, ({ one }) => ({
   task: one(taskTable, {
