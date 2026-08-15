@@ -114,6 +114,20 @@ describe("markdown round-trip: preserved", () => {
     expectLossless('<kaneo-mention id="u1" label="Kim"></kaneo-mention>');
   });
 
+  it("keeps issue links with their task id and issue key", () => {
+    // Cross-references are derived from `task-id`, so losing it here would
+    // quietly unlink every document that mentions a task.
+    const input =
+      '<kaneo-issue-link url="https://kaneo.test/dashboard/workspace/w/project/p/task/t1" issue-key="KAN-12" task-id="t1" />';
+    const once = expectStable(input);
+
+    expect(once).toContain(
+      'url="https://kaneo.test/dashboard/workspace/w/project/p/task/t1"',
+    );
+    expect(once).toContain('issue-key="KAN-12"');
+    expect(once).toContain('task-id="t1"');
+  });
+
   it("leaves math notation as literal text", () => {
     // Not rendered as math, but the characters survive.
     expectLossless("$E = mc^2$");
@@ -158,21 +172,6 @@ describe("markdown round-trip: known losses", () => {
     });
     expect(editor.getHTML()).toBe("<h1>Four</h1>");
     editor.destroy();
-  });
-
-  it("drops issue-key and task-id from issue links", () => {
-    // The attributes render as kebab-case but are declared camelCase without a
-    // parseHTML mapping, so they never survive a parse. `url` does survive,
-    // which is why the chip still resolves the task.
-    const input =
-      '<kaneo-issue-link url="https://kaneo.test/dashboard/workspace/w/project/p/task/t1" issue-key="KAN-12" task-id="t1" />';
-    const once = expectStable(input);
-
-    expect(once).toContain(
-      'url="https://kaneo.test/dashboard/workspace/w/project/p/task/t1"',
-    );
-    expect(once).toContain('issue-key=""');
-    expect(once).toContain('task-id=""');
   });
 
   it("turns single newlines into hard breaks", () => {
@@ -315,7 +314,16 @@ describe("document surface", () => {
     expect(once).toContain(
       'url="https://kaneo.test/dashboard/workspace/w/project/p/task/t1"',
     );
+    // The document surface is where cross-references are synced from.
+    expect(once).toContain('task-id="t1"');
+    expect(once).toContain('issue-key="KAN-12"');
     expect(docTrip(issueLink, 4)).toBe(once);
+  });
+
+  it("keeps the task id through four save cycles", () => {
+    const issueLink =
+      '<kaneo-issue-link url="https://kaneo.test/dashboard/workspace/w/project/p/task/abc123" issue-key="KAN-7" task-id="abc123" />';
+    expect(docTrip(issueLink, 4)).toContain('task-id="abc123"');
   });
 
   it("drops image URLs because the image node is not loaded", () => {

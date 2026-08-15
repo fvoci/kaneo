@@ -127,11 +127,37 @@ export const KaneoIssueLink = Node.create({
   atom: true,
   selectable: false,
 
+  // Every attribute renders under a different name than it is declared with
+  // (kebab-case in the DOM, camelCase in the node), so each one needs an
+  // explicit mapping back. Without it a parse silently resets the value to its
+  // default, and the link loses the task it points at on the next save.
   addAttributes() {
     return {
-      url: { default: "" },
-      issueKey: { default: "" },
-      taskId: { default: "" },
+      url: {
+        default: "",
+        parseHTML: (element: HTMLElement) =>
+          element.getAttribute("url") || element.getAttribute("data-url") || "",
+      },
+      issueKey: {
+        default: "",
+        parseHTML: (element: HTMLElement) =>
+          element.getAttribute("issue-key") ||
+          element.getAttribute("data-issue-key") ||
+          "",
+        renderHTML: (attributes: { issueKey?: string }) => ({
+          "issue-key": attributes.issueKey ?? "",
+        }),
+      },
+      taskId: {
+        default: "",
+        parseHTML: (element: HTMLElement) =>
+          element.getAttribute("task-id") ||
+          element.getAttribute("data-task-id") ||
+          "",
+        renderHTML: (attributes: { taskId?: string }) => ({
+          "task-id": attributes.taskId ?? "",
+        }),
+      },
     };
   },
 
