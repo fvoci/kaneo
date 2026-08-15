@@ -120,6 +120,86 @@ describe("API integration: documents", () => {
       expect(body[0].title).toBe("In A");
     });
 
+    it("ranks each new document after the ones already there", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      for (const title of ["First", "Second", "Third"]) {
+        await createDocument(app, project.id, { title });
+      }
+
+      const body = await (await listDocuments(app, project.id)).json();
+      expect(body.map((d: { title: string }) => d.title)).toEqual([
+        "First",
+        "Second",
+        "Third",
+      ]);
+      // 0-based, matching what the reorder endpoint will renumber a sibling
+      // group to.
+      expect(body.map((d: { position: number }) => d.position)).toEqual([
+        0, 1, 2,
+      ]);
+    });
+
+    // The reason the list is ordered by position at all: it used to be ordered
+    // by `updatedAt`, so saving a document threw it to the top and pushed every
+    // other one down while the reader was looking at it.
+    it("keeps a document in place when it is edited", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const created = [];
+      for (const title of ["First", "Second", "Third"]) {
+        created.push(
+          await (await createDocument(app, project.id, { title })).json(),
+        );
+      }
+
+      const first = created[0];
+      const response = await updateDocument(app, first.id, {
+        title: "First",
+        content: "edited",
+        version: first.version,
+      });
+      expect(response.status).toBe(200);
+
+      const body = await (await listDocuments(app, project.id)).json();
+      expect(body.map((d: { title: string }) => d.title)).toEqual([
+        "First",
+        "Second",
+        "Third",
+      ]);
+    });
+
+    // Archiving is reversible, so a rank handed out twice would tie the moment
+    // the archived document came back.
+    it("does not hand an archived document's rank to a new one", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const first = await (await createDocument(app, project.id)).json();
+      const second = await (await createDocument(app, project.id)).json();
+      expect(second.position).toBe(1);
+
+      await deleteDocument(app, second.id);
+      const third = await (await createDocument(app, project.id)).json();
+
+      expect(third.position).toBe(2);
+      expect(first.position).toBe(0);
+    });
+
     it("omits content from list rows", async () => {
       const member = await createWorkspaceMember({ role: "member" });
       const { project } = await createProjectFixture({

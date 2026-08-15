@@ -1,12 +1,19 @@
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import db from "../../database";
 import { documentTable } from "../../database/schema";
 
 /**
- * Flat list for a project, most recently edited first. Still ordered by
- * `updatedAt` rather than `position` because nothing assigns a position yet —
- * every row holds the default. The switch belongs with the change that starts
- * ranking siblings.
+ * Flat list for a project, in the order the tree will render it. Ordering by
+ * `position` rather than `updatedAt` is what keeps a document where the reader
+ * left it: editing one used to move it to the top and push everything else
+ * down, so the list reordered itself under anyone who was reading it.
+ *
+ * `createdAt` and `id` break ties the way `reorderProjects` breaks its own.
+ * They are not decoration: every document created before positions existed
+ * holds the default, and two documents can share a rank until a reorder
+ * renumbers the group. Without them Postgres is free to return tied rows in
+ * any order, and a list that shuffles on refresh is the bug this ordering is
+ * meant to remove.
  */
 async function getDocuments(projectId: string) {
   return db
@@ -27,7 +34,11 @@ async function getDocuments(projectId: string) {
         isNull(documentTable.archivedAt),
       ),
     )
-    .orderBy(desc(documentTable.updatedAt));
+    .orderBy(
+      asc(documentTable.position),
+      asc(documentTable.createdAt),
+      asc(documentTable.id),
+    );
 }
 
 export default getDocuments;
