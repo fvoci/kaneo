@@ -1,7 +1,7 @@
 import { Code2, Eye, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import CommentEditor from "@/components/activity/comment-editor";
+import DocumentBodyEditor from "@/components/document/document-body-editor";
 import DocumentConflictBanner from "@/components/document/document-conflict-banner";
 import {
   AlertDialog,
@@ -123,11 +123,10 @@ export default function DocumentEditor({
             unstyled
           />
         ) : (
-          <CommentEditor
+          <DocumentBodyEditor
             value={content}
             onChange={setContent}
             placeholder={t("documents:contentPlaceholder")}
-            showQuickAttachButton={false}
           />
         )}
       </div>

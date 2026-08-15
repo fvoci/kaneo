@@ -1,6 +1,8 @@
+import type { AnyExtension } from "@tiptap/core";
 import { Editor } from "@tiptap/core";
 import { describe, expect, it } from "vitest";
 import {
+  createDocumentExtensions,
   createEditorExtensions,
   normalizeMarkdown,
 } from "@/lib/editor-extensions";
@@ -19,6 +21,35 @@ import {
  * than skipped, so a future extension that fixes them fails here and gets
  * noticed.
  */
+function roundTripWith(
+  extensions: AnyExtension[],
+  markdown: string,
+  times: number,
+) {
+  const editor = new Editor({ extensions });
+  let current = normalizeMarkdown(markdown);
+  for (let i = 0; i < times; i += 1) {
+    editor.commands.setContent(current, {
+      emitUpdate: false,
+      contentType: "markdown",
+    });
+    current = normalizeMarkdown(editor.getMarkdown());
+  }
+  editor.destroy();
+  return current.trim();
+}
+
+function htmlFor(extensions: AnyExtension[], markdown: string) {
+  const editor = new Editor({ extensions });
+  editor.commands.setContent(markdown, {
+    emitUpdate: false,
+    contentType: "markdown",
+  });
+  const html = editor.getHTML();
+  editor.destroy();
+  return html;
+}
+
 function roundTrip(markdown: string, times = 1) {
   const editor = new Editor({ extensions: createEditorExtensions() });
   let current = normalizeMarkdown(markdown);
@@ -166,6 +197,149 @@ describe("markdown round-trip: known losses", () => {
   it("reformats table cell padding", () => {
     expect(expectStable("| a | b |\n| --- | --- |\n| 1 | 2 |")).toBe(
       "| a   | b   |\n| --- | --- |\n| 1   | 2   |",
+    );
+  });
+});
+
+describe("document surface", () => {
+  const docTrip = (markdown: string, times = 1) =>
+    roundTripWith(createDocumentExtensions(), markdown, times);
+
+  const expectDocLossless = (markdown: string) => {
+    expect(docTrip(markdown, 1)).toBe(markdown.trim());
+    // Four passes stands in for a document saved and reopened repeatedly.
+    expect(docTrip(markdown, 4)).toBe(markdown.trim());
+  };
+
+  it("renders every heading level, unlike the comment surface", () => {
+    const md = "# 1\n\n## 2\n\n### 3\n\n#### 4\n\n##### 5\n\n###### 6";
+    expectDocLossless(md);
+    expect(htmlFor(createDocumentExtensions(), md)).toBe(
+      "<h1>1</h1><h2>2</h2><h3>3</h3><h4>4</h4><h5>5</h5><h6>6</h6>",
+    );
+  });
+
+  it("renders a Korean h4 as h4", () => {
+    expectDocLossless("#### 실험 방법");
+    expect(htmlFor(createDocumentExtensions(), "#### 실험 방법")).toBe(
+      "<h4>실험 방법</h4>",
+    );
+  });
+
+  it("keeps table column alignment markers", () => {
+    const once = docTrip(
+      "| 왼쪽 | 가운데 | 오른쪽 |\n|:---|:---:|---:|\n| 1 | 2 | 3 |",
+    );
+
+    // Cell padding is rewritten, but the alignment row survives verbatim.
+    expect(once).toContain("| :--- | :---: | ---: |");
+    expect(once).toContain("왼쪽");
+    expect(
+      docTrip(
+        "| 왼쪽 | 가운데 | 오른쪽 |\n|:---|:---:|---:|\n| 1 | 2 | 3 |",
+        4,
+      ),
+    ).toBe(once);
+
+    const html = htmlFor(
+      createDocumentExtensions(),
+      "| 왼쪽 | 가운데 | 오른쪽 |\n|:---|:---:|---:|\n| 1 | 2 | 3 |",
+    );
+    expect(html).toContain("text-align: left");
+    expect(html).toContain("text-align: center");
+    expect(html).toContain("text-align: right");
+  });
+
+  it("keeps Korean table cells", () => {
+    const md = "| 항목 | 값 |\n| --- | --- |\n| 온도 | 4℃ |";
+    const once = docTrip(md);
+    expect(once).toContain("항목");
+    expect(once).toContain("4℃");
+    expect(docTrip(md, 4)).toBe(once);
+    expect(htmlFor(createDocumentExtensions(), md)).toContain("<table");
+  });
+
+  it("keeps blockquotes, lists and checklists", () => {
+    expectDocLossless("> 인용문");
+    expectDocLossless("- 첫째\n- 둘째\n  - 하위");
+    expectDocLossless("1. 하나\n2. 둘");
+    expectDocLossless("- [ ] 할 일\n- [x] 완료");
+  });
+
+  it("keeps fenced code blocks including a mermaid fence", () => {
+    expectDocLossless("```python\nprint('측정')\n```");
+    // MermaidBlock is not loaded here, so a mermaid fence stays a code block
+    // rather than a diagram — the source is preserved either way.
+    expectDocLossless("```mermaid\ngraph TD;\nA-->B;\n```");
+  });
+
+  it("keeps mention and issue-link nodes", () => {
+    expectDocLossless('<kaneo-mention id="u1" label="김"></kaneo-mention>');
+    const issueLink =
+      '<kaneo-issue-link url="https://kaneo.test/dashboard/workspace/w/project/p/task/t1" issue-key="KAN-12" task-id="t1" />';
+    const once = docTrip(issueLink);
+    expect(once).toContain("kaneo-issue-link");
+    expect(once).toContain(
+      'url="https://kaneo.test/dashboard/workspace/w/project/p/task/t1"',
+    );
+    expect(docTrip(issueLink, 4)).toBe(once);
+  });
+
+  it("drops image URLs because the image node is not loaded", () => {
+    // Excluding Image keeps uploads out of documents, but it also means plain
+    // Markdown images lose their src and survive only as their alt text.
+    expect(docTrip("![대체텍스트](https://example.com/a.png)")).toBe(
+      "대체텍스트",
+    );
+  });
+
+  it("survives four passes over a mixed Korean document", () => {
+    const md = [
+      "# 실험 프로토콜",
+      "",
+      "#### 4단계 세부 항목",
+      "",
+      "| 항목 | 값 | 비고 |",
+      "|:---|:---:|---:|",
+      "| 온도 | 4℃ | 유지 |",
+      "",
+      "- [x] 시약 준비",
+      "- [ ] 측정",
+      "",
+      '> 담당: <kaneo-mention id="u1" label="김"></kaneo-mention>',
+      "",
+      "```python",
+      "print('측정 시작')",
+      "```",
+    ].join("\n");
+
+    const once = docTrip(md, 1);
+    expect(docTrip(md, 3)).toBe(once);
+    expect(docTrip(md, 4)).toBe(once);
+    expect(once).toContain("#### 4단계 세부 항목");
+    expect(once).toContain("| :--- | :---: | ---: |");
+    expect(once).toContain("4℃");
+    expect(once).toContain("kaneo-mention");
+  });
+});
+
+describe("comment surface is unchanged by the document preset", () => {
+  it("still limits headings to h1-h3", () => {
+    expect(htmlFor(createEditorExtensions(), "#### Four")).toBe(
+      "<h1>Four</h1>",
+    );
+  });
+
+  it("still renders tables", () => {
+    // Comments have always had tables; the document preset does not remove them.
+    expect(
+      htmlFor(createEditorExtensions(), "| a | b |\n| --- | --- |\n| 1 | 2 |"),
+    ).toContain("<table");
+  });
+
+  it("still keeps markdown images", () => {
+    expect(roundTrip("![alt](https://example.com/a.png)")).toBe(
+      "![alt](https://example.com/a.png)",
     );
   });
 });

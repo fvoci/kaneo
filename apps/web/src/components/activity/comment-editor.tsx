@@ -1,4 +1,4 @@
-import type { Editor } from "@tiptap/core";
+import type { AnyExtension, Editor } from "@tiptap/core";
 import { Fragment, Slice } from "@tiptap/pm/model";
 import { TextSelection } from "@tiptap/pm/state";
 import { EditorContent, useEditor } from "@tiptap/react";
@@ -45,6 +45,7 @@ import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-
 import { cn } from "@/lib/cn";
 import {
   createEditorExtensions,
+  type EditorExtensionOptions,
   normalizeMarkdown,
   toShikiLanguage,
 } from "@/lib/editor-extensions";
@@ -79,6 +80,11 @@ type CommentEditorProps = {
   ensureTaskId?: () => Promise<string | null>;
   showQuickAttachButton?: boolean;
   onAttachActionChange?: (attach: (() => void) | null) => void;
+  /**
+   * Lets a surface swap the extension set (and therefore which Markdown it can
+   * represent) without forking this component. Defaults to the comment set.
+   */
+  buildExtensions?: (options: EditorExtensionOptions) => AnyExtension[];
 };
 
 type SlashRange = { from: number; to: number };
@@ -160,6 +166,7 @@ export default function CommentEditor({
   ensureTaskId,
   showQuickAttachButton = true,
   onAttachActionChange,
+  buildExtensions = createEditorExtensions,
 }: CommentEditorProps) {
   const { t } = useTranslation();
   const resolvedPlaceholder =
@@ -556,7 +563,7 @@ export default function CommentEditor({
       immediatelyRender: false,
       autofocus: autoFocus,
       editable: !readOnly && !disabled,
-      extensions: createEditorExtensions({
+      extensions: buildExtensions({
         readOnly,
         placeholder: resolvedPlaceholder,
         getHighlighter: () => shikiHighlighterRef.current,

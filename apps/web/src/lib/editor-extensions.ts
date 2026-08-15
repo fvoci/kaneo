@@ -123,3 +123,67 @@ export function createEditorExtensions({
     TableCell,
   ];
 }
+
+/**
+ * Wiki documents are long-form, so they allow the full heading range instead of
+ * the h1-h3 that comments are limited to.
+ *
+ * Image, MermaidBlock and AttachmentCard are left out: uploads belong to a
+ * later phase, and a node that cannot be created is one less thing that can
+ * appear in stored Markdown. EmbedBlock stays because the paste handler offers
+ * an embed for video URLs, and dropping the node would leave that choice
+ * silently doing nothing.
+ */
+export function createDocumentExtensions({
+  readOnly = false,
+  placeholder = "",
+  getHighlighter = () => null,
+  getMentionMembers = () => [],
+}: EditorExtensionOptions = {}): AnyExtension[] {
+  return [
+    StarterKit.configure({
+      heading: { levels: [1, 2, 3, 4, 5, 6] },
+      trailingNode: false,
+      codeBlock: {
+        HTMLAttributes: { class: "kaneo-tiptap-codeblock" },
+      },
+    }),
+    Link.configure({
+      autolink: true,
+      defaultProtocol: "https",
+      linkOnPaste: true,
+      openOnClick: readOnly,
+    }),
+    Markdown.configure({
+      markedOptions: {
+        breaks: true,
+        gfm: true,
+      },
+    }),
+    ShikiCodeBlock.configure({
+      highlighter: getHighlighter,
+      resolveLanguage: toShikiLanguage,
+      themeDark: "github-dark",
+      themeLight: "github-light",
+    }),
+    EmbedBlock,
+    KaneoIssueLink,
+    KaneoMention,
+    MentionSuggestion.configure({
+      getMembers: getMentionMembers,
+    }),
+    TaskList,
+    TaskItemWithCheckbox.configure({
+      nested: true,
+    }),
+    Placeholder.configure({
+      placeholder,
+    }),
+    Table.configure({
+      resizable: true,
+    }),
+    TableRow,
+    TableHeader,
+    TableCell,
+  ];
+}
