@@ -1,6 +1,6 @@
 import type { Editor } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
+import { BlockMath } from "@tiptap/extension-mathematics";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Table } from "@tiptap/extension-table";
 import TableCell from "@tiptap/extension-table-cell";
@@ -557,12 +557,15 @@ export default function TaskDescription({ taskId }: TaskDescriptionProps) {
           },
           trailingNode: false,
           heading: { levels: [1, 2, 3] },
-        }),
-        Link.configure({
-          autolink: true,
-          defaultProtocol: "https",
-          linkOnPaste: true,
-          openOnClick: false,
+          // StarterKit bundles Link; registering a second one collides on the
+          // mark name and lets the later registration silently replace the
+          // earlier one's configuration.
+          link: {
+            autolink: true,
+            defaultProtocol: "https",
+            linkOnPaste: true,
+            openOnClick: false,
+          },
         }),
         Markdown.configure({
           markedOptions: {
@@ -577,6 +580,12 @@ export default function TaskDescription({ taskId }: TaskDescriptionProps) {
           themeLight: "github-light",
         }),
         MermaidBlock,
+        // Not optional. Markdown tokenizers register process-wide, so once any
+        // editor carrying BlockMath exists — opening a document is enough —
+        // every editor parses `$$...$$` into a blockMath node, and a surface
+        // whose schema lacks that node drops it and deletes the formula on the
+        // next save.
+        BlockMath,
         EmbedBlock,
         AttachmentCard,
         KaneoIssueLink,
