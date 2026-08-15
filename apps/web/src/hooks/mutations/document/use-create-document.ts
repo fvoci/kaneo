@@ -10,8 +10,6 @@ function useCreateDocument() {
       void queryClient.invalidateQueries({
         queryKey: ["documents", variables.projectId],
       });
-      // A new document can arrive with links already in its body.
-      void queryClient.invalidateQueries({ queryKey: ["task-documents"] });
     },
   });
 }

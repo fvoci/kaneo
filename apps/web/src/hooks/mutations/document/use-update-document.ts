@@ -16,10 +16,6 @@ function useUpdateDocument(projectId: string) {
       void queryClient.invalidateQueries({
         queryKey: ["documents", projectId],
       });
-      // A save rewrites this document's task links, and the panel that shows
-      // them lives on the task side. The affected tasks are decided by the
-      // server, so the whole prefix goes stale.
-      void queryClient.invalidateQueries({ queryKey: ["task-documents"] });
     },
   });
 }

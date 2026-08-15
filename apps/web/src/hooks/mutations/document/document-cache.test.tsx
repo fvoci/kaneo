@@ -36,32 +36,39 @@ function wrapperFor(client: QueryClient) {
 }
 
 /**
- * The backlink panel lives on the task side and reads `["task-documents"]`.
- * Nothing on that screen knows a document was saved, and the query client is
- * configured with `refetchOnMount: false`, so without an explicit invalidation
- * a task keeps showing links the document no longer has.
+ * Seeds both caches a document mutation can touch: the project's document list
+ * and one task's backlink panel. The client is configured with
+ * `refetchOnMount: false`, so whatever is not invalidated here is what a screen
+ * keeps showing.
  */
-async function expectBacklinksInvalidated(
-  run: (client: QueryClient) => Promise<void>,
-) {
+async function runMutation(run: (client: QueryClient) => Promise<void>) {
   const client = makeClient();
+  client.setQueryData(["documents", "p1"], []);
   client.setQueryData(["task-documents", "t1"], [{ id: "stale" }]);
-  expect(client.getQueryState(["task-documents", "t1"])?.isInvalidated).toBe(
-    false,
-  );
 
   await run(client);
 
   await waitFor(() => {
-    expect(client.getQueryState(["task-documents", "t1"])?.isInvalidated).toBe(
-      true,
-    );
+    expect(client.getQueryState(["documents", "p1"])?.isInvalidated).toBe(true);
   });
+  return client;
 }
 
-describe("document mutations invalidate task backlinks", () => {
-  it("invalidates after a save", async () => {
-    await expectBacklinksInvalidated(async (client) => {
+const backlinksInvalidated = (client: QueryClient) =>
+  client.getQueryState(["task-documents", "t1"])?.isInvalidated;
+
+/**
+ * Which tasks a document references is decided by the link endpoints, and those
+ * invalidate the exact task they touched. Only a mutation that can change a
+ * link without going through them has any business invalidating the whole
+ * prefix — archiving is the one that can.
+ */
+describe("document mutations and task backlinks", () => {
+  // A save rewrites the body, and the body has not created references since
+  // links became explicit. Invalidating the prefix here would refetch every
+  // open backlink panel on every save.
+  it("leaves every task's backlinks alone after a save", async () => {
+    const client = await runMutation(async (client) => {
       const { result } = renderHook(() => useUpdateDocument("p1"), {
         wrapper: wrapperFor(client),
       });
@@ -74,10 +81,13 @@ describe("document mutations invalidate task backlinks", () => {
         });
       });
     });
+
+    expect(backlinksInvalidated(client)).toBe(false);
   });
 
-  it("invalidates after a create", async () => {
-    await expectBacklinksInvalidated(async (client) => {
+  // A document that does not exist yet cannot be linked to anything.
+  it("leaves every task's backlinks alone after a create", async () => {
+    const client = await runMutation(async (client) => {
       const { result } = renderHook(() => useCreateDocument(), {
         wrapper: wrapperFor(client),
       });
@@ -85,10 +95,14 @@ describe("document mutations invalidate task backlinks", () => {
         await result.current.mutateAsync({ projectId: "p1", title: "T" });
       });
     });
+
+    expect(backlinksInvalidated(client)).toBe(false);
   });
 
+  // Archiving drops the document out of every backlink list without any link
+  // row changing, so nothing else will invalidate those panels.
   it("invalidates after a delete", async () => {
-    await expectBacklinksInvalidated(async (client) => {
+    const client = await runMutation(async (client) => {
       const { result } = renderHook(() => useDeleteDocument("p1"), {
         wrapper: wrapperFor(client),
       });
@@ -96,5 +110,7 @@ describe("document mutations invalidate task backlinks", () => {
         await result.current.mutateAsync("d1");
       });
     });
+
+    expect(backlinksInvalidated(client)).toBe(true);
   });
 });
