@@ -92,7 +92,26 @@ async function syncDocumentTaskLinks({
       .onConflictDoNothing();
   }
 
-  return { linked: allowed, removed, added };
+  // Websockets are scoped per project, and a document may link a task in
+  // another project of the same workspace. Both the tasks that stayed linked
+  // and the ones just unlinked have a backlink list that changed, so their
+  // projects need telling.
+  const touched = [...new Set([...allowed, ...removed])];
+  const affectedProjectIds =
+    touched.length > 0
+      ? [
+          ...new Set(
+            (
+              await tx
+                .select({ projectId: taskTable.projectId })
+                .from(taskTable)
+                .where(inArray(taskTable.id, touched))
+            ).map((row) => row.projectId),
+          ),
+        ]
+      : [];
+
+  return { linked: allowed, removed, added, affectedProjectIds };
 }
 
 export default syncDocumentTaskLinks;

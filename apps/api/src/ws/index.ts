@@ -193,7 +193,7 @@ export function broadcastToProject(
     projectBroadcastQueues.set(projectId, new Map());
   }
 
-  const messageKey = `${message.type}:${message.taskId ?? ""}:${message.sourceTaskId ?? ""}:${message.targetTaskId ?? ""}`;
+  const messageKey = `${message.type}:${message.taskId ?? ""}:${message.sourceTaskId ?? ""}:${message.targetTaskId ?? ""}:${message.documentId ?? ""}`;
   projectBroadcastQueues
     .get(projectId)
     ?.set(messageKey, { message, excludeInitiatorId });
@@ -362,5 +362,38 @@ for (const eventName of taskUpdateEvents) {
       },
       initiatorId,
     );
+  });
+}
+
+type DocumentEvent = {
+  documentId: string;
+  projectId: string;
+  /**
+   * Projects of the tasks whose backlinks changed. A document may reference a
+   * task in another project of the same workspace, and websockets are scoped
+   * per project, so those rooms have to be told as well.
+   */
+  affectedProjectIds?: string[];
+  userId?: string;
+  initiatorId?: string;
+};
+
+for (const eventName of [
+  "document.created",
+  "document.updated",
+  "document.deleted",
+]) {
+  subscribeToEvent<DocumentEvent>(eventName, async (data) => {
+    const { documentId, projectId, affectedProjectIds, initiatorId } = data;
+    if (!documentId || !projectId) return;
+
+    const rooms = new Set<string>([projectId, ...(affectedProjectIds ?? [])]);
+    for (const room of rooms) {
+      broadcastToProject(
+        room,
+        { type: "DOCUMENT_UPDATED", projectId: room, documentId },
+        initiatorId,
+      );
+    }
   });
 }

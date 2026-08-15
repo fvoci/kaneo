@@ -2,6 +2,7 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { documentTable } from "../../database/schema";
+import { publishEvent } from "../../events";
 import syncDocumentTaskLinks from "./sync-document-task-links";
 
 /**
@@ -33,7 +34,7 @@ async function updateDocument({
   currentUserId: string;
   workspaceId: string;
 }) {
-  return db.transaction(async (tx) => {
+  const { document, affectedProjectIds } = await db.transaction(async (tx) => {
     const [updated] = await tx
       .update(documentTable)
       .set({
@@ -54,14 +55,14 @@ async function updateDocument({
       .returning();
 
     if (updated) {
-      await syncDocumentTaskLinks({
+      const { affectedProjectIds: touched } = await syncDocumentTaskLinks({
         tx,
         documentId: updated.id,
         workspaceId,
         content: updated.content,
         taskIds,
       });
-      return updated;
+      return { document: updated, affectedProjectIds: touched };
     }
 
     // Zero rows means the guard failed. Only now is a second read worth paying
@@ -89,6 +90,17 @@ async function updateDocument({
       ),
     });
   });
+
+  // Published after the commit: a rolled-back write must not tell anyone the
+  // document changed.
+  await publishEvent("document.updated", {
+    documentId: document.id,
+    projectId: document.projectId,
+    affectedProjectIds,
+    userId: currentUserId,
+  });
+
+  return document;
 }
 
 export default updateDocument;

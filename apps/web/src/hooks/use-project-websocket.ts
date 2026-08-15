@@ -112,6 +112,23 @@ export function useProjectWebSocket(projectId: string) {
               });
             }
           }
+
+          // Kept out of the branch above: documents have no task id, and the
+          // task queries it refreshes are not affected by them. Older clients
+          // simply never match this type.
+          if (message.type === "DOCUMENT_UPDATED") {
+            queryClient.invalidateQueries({
+              queryKey: ["documents", message.projectId],
+            });
+            if (message.documentId) {
+              queryClient.invalidateQueries({
+                queryKey: ["document", message.documentId],
+              });
+            }
+            // Which tasks a document links to is decided server-side, so the
+            // whole prefix is refreshed.
+            queryClient.invalidateQueries({ queryKey: ["task-documents"] });
+          }
         } catch {
           // Ignore malformed messages
         }

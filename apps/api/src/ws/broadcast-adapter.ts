@@ -4,6 +4,11 @@ export type ProjectBroadcastMessage = {
   taskId?: string;
   sourceTaskId?: string;
   targetTaskId?: string;
+  /**
+   * Set only by document messages. Optional so instances and clients that
+   * predate documents keep parsing every message they already understood.
+   */
+  documentId?: string;
 };
 
 export type BroadcastMessage = {

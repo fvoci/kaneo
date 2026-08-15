@@ -1,6 +1,7 @@
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { documentTable } from "../../database/schema";
+import { publishEvent } from "../../events";
 import syncDocumentTaskLinks from "./sync-document-task-links";
 
 async function createDocument({
@@ -20,7 +21,7 @@ async function createDocument({
 }) {
   // Same transaction as the update path: a document and the links its body
   // implies become visible together.
-  return db.transaction(async (tx) => {
+  const { document, affectedProjectIds } = await db.transaction(async (tx) => {
     const [document] = await tx
       .insert(documentTable)
       .values({
@@ -36,7 +37,7 @@ async function createDocument({
       throw new HTTPException(500, { message: "Failed to create document" });
     }
 
-    await syncDocumentTaskLinks({
+    const { affectedProjectIds: touched } = await syncDocumentTaskLinks({
       tx,
       documentId: document.id,
       workspaceId,
@@ -44,8 +45,17 @@ async function createDocument({
       taskIds,
     });
 
-    return document;
+    return { document, affectedProjectIds: touched };
   });
+
+  await publishEvent("document.created", {
+    documentId: document.id,
+    projectId: document.projectId,
+    affectedProjectIds,
+    userId: currentUserId,
+  });
+
+  return document;
 }
 
 export default createDocument;
