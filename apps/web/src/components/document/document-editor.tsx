@@ -15,7 +15,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { parseTaskLinkIds } from "@/lib/parse-task-links";
 import type { Document } from "@/types/document";
 
 type DocumentEditorProps = {
@@ -23,12 +22,7 @@ type DocumentEditorProps = {
   isSaving: boolean;
   isDeleting: boolean;
   conflictVersion: number | null;
-  onSave: (draft: {
-    title: string;
-    content: string;
-    version: number;
-    taskIds: string[];
-  }) => void;
+  onSave: (draft: { title: string; content: string; version: number }) => void;
   onDelete: () => void;
   onReloadAfterConflict: () => void;
 };
@@ -107,9 +101,6 @@ export default function DocumentEditor({
               title: title.trim(),
               content,
               version: document.version,
-              // Read from the body being saved, so the links the server stores
-              // always match the text that produced them.
-              taskIds: parseTaskLinkIds(content),
             })
           }
         >

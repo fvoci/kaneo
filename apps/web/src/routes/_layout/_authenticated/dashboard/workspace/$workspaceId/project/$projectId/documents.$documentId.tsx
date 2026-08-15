@@ -39,7 +39,6 @@ function RouteComponent() {
     title: string;
     content: string;
     version: number;
-    taskIds: string[];
   }) => {
     updateDocument.mutate(
       { id: documentId, ...draft },

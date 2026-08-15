@@ -4,19 +4,16 @@ async function createDocument({
   projectId,
   title,
   content,
-  taskIds,
 }: {
   projectId: string;
   title: string;
   content?: string;
-  taskIds?: string[];
 }) {
   const response = await client.document.project[":projectId"].$post({
     param: { projectId },
     json: {
       title,
       ...(content !== undefined ? { content } : {}),
-      ...(taskIds ? { taskIds } : {}),
     },
   });
 

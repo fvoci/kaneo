@@ -127,7 +127,6 @@ describe("DocumentEditor save wiring", () => {
       title: "제목",
       content: "## 타이핑한 본문\n\n내용",
       version: 1,
-      taskIds: [],
     });
   });
 
@@ -153,9 +152,10 @@ describe("DocumentEditor save wiring", () => {
     );
   });
 
-  it("sends the task ids the body links to", async () => {
-    // Cross-references are derived from the body being saved, so the payload
-    // has to carry what the editor just produced.
+  it("saves an issue link in the body without turning it into a reference", async () => {
+    // An inline chip navigates to a task; it does not relate the document to
+    // one. References are created through the link endpoints, so the save
+    // payload carries the body and nothing derived from it.
     const { getByTestId, saveButton, onSave } = renderEditor({ content: "" });
 
     await act(async () => {
@@ -166,9 +166,10 @@ describe("DocumentEditor save wiring", () => {
       if (button) fireEvent.click(button);
     });
 
-    expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({ taskIds: ["task-1"] }),
-    );
+    expect(onSave).toHaveBeenCalledTimes(1);
+    const [draft] = onSave.mock.calls[0];
+    expect(draft.content).toContain('task-id="task-1"');
+    expect(Object.keys(draft).sort()).toEqual(["content", "title", "version"]);
   });
 
   it("hands the stored body to the editor on open", () => {
