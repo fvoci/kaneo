@@ -414,9 +414,9 @@ input:-webkit-autofill:active {
     position: fixed;
     z-index: 50;
     min-width: 16rem;
-    /* The command list is taller than a short editor, so cap it and scroll
-       rather than letting it run past the viewport. */
-    max-height: min(22rem, 60vh);
+    /* Fallback cap; the component sets an inline max-height from the room on
+       the side it lands, so the list scrolls instead of leaving the screen. */
+    max-height: min(26rem, 70vh);
     overflow-y: auto;
     overscroll-behavior: contain;
     border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);

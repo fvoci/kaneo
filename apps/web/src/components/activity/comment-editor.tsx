@@ -24,7 +24,14 @@ import {
   UnderlineIcon,
 } from "lucide-react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import type { Highlighter } from "shiki";
 import type { MentionMember } from "@/components/task/extensions/mention-list";
@@ -98,12 +105,30 @@ type SlashCommand = {
   run: (editor: Editor, range: SlashRange) => void;
 };
 
+const SLASH_MENU_GAP = 8;
+const SLASH_MENU_MIN_HEIGHT = 160;
+// Tall enough for the full command list; the side room caps it further.
+const SLASH_MENU_MAX_HEIGHT = 420;
+
+type SlashMenuPlacement = "below" | "above";
+
+type SlashMenuAnchor = {
+  left: number;
+  /** Applied as `top` when the menu sits under the caret. */
+  topBelow: number;
+  /** Applied as `bottom` when the menu sits over the caret. */
+  bottomAbove: number;
+  /** Viewport room between the caret and each edge, used to pick a side. */
+  spaceBelow: number;
+  spaceAbove: number;
+};
+
 type SlashMenuState = {
   from: number;
   to: number;
   query: string;
-  top: number;
-  left: number;
+  anchor: SlashMenuAnchor;
+  placement: SlashMenuPlacement;
   selectedIndex: number;
 };
 
@@ -186,6 +211,7 @@ export default function CommentEditor({
     [workspaceUsers],
   );
   const editorShellRef = useRef<HTMLDivElement | null>(null);
+  const slashMenuRef = useRef<HTMLDivElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const dragDepthRef = useRef(0);
   const isSyncingRef = useRef(false);
@@ -233,6 +259,39 @@ export default function CommentEditor({
       })),
     [t],
   );
+  const getSlashMenuAnchor = useCallback(
+    (editorView: Editor["view"], pos: number): SlashMenuAnchor => {
+      const coords = editorView.coordsAtPos(pos);
+      const shellRect = editorShellRef.current?.getBoundingClientRect();
+      const viewportHeight =
+        typeof window === "undefined" ? 0 : window.innerHeight;
+
+      // The side is always chosen from viewport room; only the applied
+      // coordinates differ between fixed and absolute placement.
+      const spaceBelow = viewportHeight - coords.bottom - SLASH_MENU_GAP;
+      const spaceAbove = coords.top - SLASH_MENU_GAP;
+
+      if (slashMenuPosition === "fixed" || !shellRect) {
+        return {
+          left: coords.left,
+          topBelow: coords.bottom + SLASH_MENU_GAP,
+          bottomAbove: viewportHeight - coords.top + SLASH_MENU_GAP,
+          spaceBelow,
+          spaceAbove,
+        };
+      }
+
+      return {
+        left: coords.left - shellRect.left,
+        topBelow: coords.bottom - shellRect.top + SLASH_MENU_GAP,
+        bottomAbove: shellRect.bottom - coords.top + SLASH_MENU_GAP,
+        spaceBelow,
+        spaceAbove,
+      };
+    },
+    [slashMenuPosition],
+  );
+
   const getOverlayPosition = useCallback(
     (editorView: Editor["view"], pos: number) => {
       const coords = editorView.coordsAtPos(pos);
@@ -935,19 +994,40 @@ export default function CommentEditor({
         $from.parentOffset - matchText.length + (startsWithSpace ? 1 : 0);
       const from = $from.start() + slashOffset;
       const to = from + matchText.trimStart().length;
-      const { top, left } = getOverlayPosition(view, $from.pos);
+      const anchor = getSlashMenuAnchor(view, $from.pos);
 
       setSlashMenu((current) => ({
         from,
         to,
         query,
-        top,
-        left,
+        anchor,
+        // Start under the caret; the layout effect measures the rendered menu
+        // and flips it up when it would not fit.
+        placement: current?.placement ?? "below",
         selectedIndex: current?.query === query ? current.selectedIndex : 0,
       }));
     },
-    [disabled, getOverlayPosition, readOnly],
+    [disabled, getSlashMenuAnchor, readOnly],
   );
+
+  // Measured before paint, so a menu that would run past the bottom of the
+  // window is flipped above the caret without a visible jump.
+  useLayoutEffect(() => {
+    const element = slashMenuRef.current;
+    if (!slashMenu || !element) return;
+
+    const height = element.getBoundingClientRect().height;
+    const { spaceAbove, spaceBelow } = slashMenu.anchor;
+    const fitsBelow = height <= spaceBelow;
+    const placement: SlashMenuPlacement =
+      fitsBelow || spaceAbove <= spaceBelow ? "below" : "above";
+
+    if (placement !== slashMenu.placement) {
+      setSlashMenu((current) =>
+        current ? { ...current, placement } : current,
+      );
+    }
+  }, [slashMenu]);
 
   useEffect(() => {
     if (!editor) return;
@@ -1687,11 +1767,25 @@ export default function CommentEditor({
       )}
       {slashMenu && !readOnly && !disabled && (
         <div
+          ref={slashMenuRef}
           className="kaneo-tiptap-slash-menu"
           style={{
-            top: slashMenu.top,
-            left: slashMenu.left,
+            left: slashMenu.anchor.left,
+            ...(slashMenu.placement === "above"
+              ? { bottom: slashMenu.anchor.bottomAbove }
+              : { top: slashMenu.anchor.topBelow }),
             position: slashMenuPosition,
+            // Never taller than the side it sits on, so the far edge stays on
+            // screen and the list scrolls instead.
+            maxHeight: Math.min(
+              SLASH_MENU_MAX_HEIGHT,
+              Math.max(
+                SLASH_MENU_MIN_HEIGHT,
+                slashMenu.placement === "above"
+                  ? slashMenu.anchor.spaceAbove
+                  : slashMenu.anchor.spaceBelow,
+              ),
+            ),
           }}
         >
           {filteredSlashCommands.length > 0 ? (
