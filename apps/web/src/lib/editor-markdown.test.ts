@@ -278,6 +278,47 @@ describe("extension sets are well formed", () => {
     expect(roundTripWith(foreign(), formula, 4)).toBe(before);
   });
 
+  // The three surfaces this app actually renders. Whatever else they differ
+  // by, none of them may differ by what Markdown means.
+  const SURFACES = {
+    comment: () => createEditorExtensions(),
+    document: () => createDocumentExtensions(),
+    task: () => createEditorExtensions({ mentions: false }),
+  };
+
+  it.each(Object.keys(SURFACES))(
+    "gives the %s surface every markdown syntax extension",
+    (surface) => {
+      const present = names(SURFACES[surface as keyof typeof SURFACES]());
+      for (const required of ["blockMath", "mermaidBlock", "markdown"]) {
+        expect(present, `${surface} is missing ${required}`).toContain(
+          required,
+        );
+      }
+    },
+  );
+
+  it.each(Object.keys(SURFACES))("renders a formula on the %s surface", (s) => {
+    const html = htmlFor(
+      SURFACES[s as keyof typeof SURFACES](),
+      "$$\n\\frac{a}{b}\n$$",
+    );
+    expect(html).toContain('data-type="block-math"');
+  });
+
+  // `mentions: false` is the only thing the task surface asks for, so it had
+  // better be the only thing it loses. Descriptions gaining an `@` picker would
+  // be a feature nobody asked for; losing anything else would be the bug.
+  it("drops only the mention extensions when mentions are off", () => {
+    const withMentions = names(createEditorExtensions());
+    const without = names(createEditorExtensions({ mentions: false }));
+
+    expect(
+      [...withMentions].filter((name) => !without.has(name)).sort(),
+    ).toEqual(["kaneoMention", "kaneoMentionSuggestion"]);
+    expect([...without].filter((name) => !withMentions.has(name))).toEqual([]);
+  });
+
   // Extension order becomes ProseMirror's schema order, which breaks ties
   // between parse rules. Sharing a builder must not quietly reorder either set.
   it("registers the shared extensions in the same order on both surfaces", () => {

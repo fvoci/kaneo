@@ -1,18 +1,8 @@
 import type { Editor } from "@tiptap/core";
-import Image from "@tiptap/extension-image";
-import { BlockMath } from "@tiptap/extension-mathematics";
-import Placeholder from "@tiptap/extension-placeholder";
-import { Table } from "@tiptap/extension-table";
-import TableCell from "@tiptap/extension-table-cell";
-import TableHeader from "@tiptap/extension-table-header";
-import TableRow from "@tiptap/extension-table-row";
-import TaskList from "@tiptap/extension-task-list";
-import { Markdown } from "@tiptap/markdown";
 import { Fragment, Slice } from "@tiptap/pm/model";
 import { TextSelection } from "@tiptap/pm/state";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
-import StarterKit from "@tiptap/starter-kit";
 import {
   BetweenHorizontalEnd,
   BetweenHorizontalStart,
@@ -59,6 +49,7 @@ import useGetTask from "@/hooks/queries/task/use-get-task";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { cn } from "@/lib/cn";
 import debounce from "@/lib/debounce";
+import { createEditorExtensions } from "@/lib/editor-extensions";
 import { parseTaskListMarkdownToNodes } from "@/lib/editor-task-list-paste";
 import {
   extractIssueKeyFromUrl,
@@ -70,15 +61,7 @@ import { isInCodeBlockLanguagePicker } from "@/lib/is-in-codeblock-language-pick
 import { getSharedShikiHighlighter } from "@/lib/shiki-highlighter";
 import { toast } from "@/lib/toast";
 import { uploadTaskImage } from "@/lib/upload-task-image";
-import { AttachmentCard } from "./extensions/attachment-card";
-import { EmbedBlock } from "./extensions/embed-block";
-import { KaneoIssueLink } from "./extensions/kaneo-issue-link";
-import { MermaidBlock } from "./extensions/mermaid-block";
-import {
-  SHIKI_CODEBLOCK_REFRESH_META,
-  ShikiCodeBlock,
-} from "./extensions/shiki-code-block";
-import { TaskItemWithCheckbox } from "./extensions/task-item-with-checkbox";
+import { SHIKI_CODEBLOCK_REFRESH_META } from "./extensions/shiki-code-block";
 import "tippy.js/dist/tippy.css";
 
 type TaskDescriptionProps = {
@@ -550,65 +533,18 @@ export default function TaskDescription({ taskId }: TaskDescriptionProps) {
   const editor = useEditor(
     {
       immediatelyRender: false,
-      extensions: [
-        StarterKit.configure({
-          codeBlock: {
-            HTMLAttributes: { class: "kaneo-tiptap-codeblock" },
-          },
-          trailingNode: false,
-          heading: { levels: [1, 2, 3] },
-          // StarterKit bundles Link; registering a second one collides on the
-          // mark name and lets the later registration silently replace the
-          // earlier one's configuration.
-          link: {
-            autolink: true,
-            defaultProtocol: "https",
-            linkOnPaste: true,
-            openOnClick: false,
-          },
-        }),
-        Markdown.configure({
-          markedOptions: {
-            breaks: true,
-            gfm: true,
-          },
-        }),
-        ShikiCodeBlock.configure({
-          highlighter: () => shikiHighlighterRef.current,
-          resolveLanguage: toShikiLanguage,
-          themeDark: "github-dark",
-          themeLight: "github-light",
-        }),
-        MermaidBlock,
-        // Not optional. Markdown tokenizers register process-wide, so once any
-        // editor carrying BlockMath exists — opening a document is enough —
-        // every editor parses `$$...$$` into a blockMath node, and a surface
-        // whose schema lacks that node drops it and deletes the formula on the
-        // next save.
-        BlockMath,
-        EmbedBlock,
-        AttachmentCard,
-        KaneoIssueLink,
-        TaskList,
-        Image.configure({
-          HTMLAttributes: {
-            class: "kaneo-editor-image",
-            loading: "lazy",
-          },
-        }),
-        TaskItemWithCheckbox.configure({
-          nested: true,
-        }),
-        Placeholder.configure({
-          placeholder: t("tasks:detail.editor.placeholder"),
-        }),
-        Table.configure({
-          resizable: true,
-        }),
-        TableRow,
-        TableHeader,
-        TableCell,
-      ],
+      // Built from the shared set, not a list of its own. A description stores
+      // Markdown, so which extensions it carries decides what survives a save —
+      // and the list this file used to keep is how it ended up deleting
+      // formulas.
+      extensions: createEditorExtensions({
+        placeholder: t("tasks:detail.editor.placeholder"),
+        getHighlighter: () => shikiHighlighterRef.current,
+        // Descriptions have never offered `@` mentions, and turning them on
+        // here would be a new feature rather than a merge.
+        mentions: false,
+        mermaidErrorKey: "tasks:detail.editor.mermaid.renderFailed",
+      }),
       editorProps: {
         attributes: {
           class: "kaneo-tiptap-prose",

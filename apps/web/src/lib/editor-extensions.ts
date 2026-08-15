@@ -56,7 +56,71 @@ export type EditorExtensionOptions = {
   getHighlighter?: () => Highlighter | null;
   getMentionMembers?: () => MentionMember[];
   surface?: EditorSurface;
+  /** Whether `@` opens the member picker. Off where mentions are not a feature. */
+  mentions?: boolean;
+  /** i18n key for the toast a failed diagram raises. */
+  mermaidErrorKey?: string;
 };
+
+/**
+ * The extensions that decide how Markdown parses, as opposed to what a surface
+ * lets someone type. Every editor gets all of them, and no caller can turn one
+ * off — that is the whole point of the group existing.
+ *
+ * Parsing is process-wide in a way the schema is not. A tokenizer registered by
+ * one editor changes how text is read everywhere, but the nodes it produces are
+ * only storable by editors whose schema declares them, and a node that cannot
+ * be stored is dropped rather than kept as text. So a surface that opts out of
+ * a syntax extension does not stop seeing that syntax; it starts deleting it.
+ * That is the shape of the bug this repository has now hit three times — in
+ * documents, in comments, and in task descriptions.
+ *
+ * `Markdown` carries the isolated `Marked` instance, which is what keeps one
+ * editor's tokenizers out of another's parser. It belongs here for the same
+ * reason as the rest: it is not a surface's decision to make.
+ */
+function markdownSyntaxExtensions({
+  getHighlighter,
+  mermaidErrorKey,
+}: {
+  getHighlighter: () => Highlighter | null;
+  mermaidErrorKey: string;
+}): AnyExtension[] {
+  return [
+    Markdown.configure({
+      // Every editor parses against its own marked instance. Without this
+      // `MarkdownManager` falls back to the module-level singleton that
+      // `marked` exports, and each editor registers its tokenizers on that one
+      // with no way to unregister: constructing a single editor that carries
+      // BlockMath taught every other editor in the page to parse `$$...$$`
+      // into a node their schema did not have.
+      //
+      // Isolation belongs here rather than at each call site, because a call
+      // site that forgets it silently goes back to sharing the singleton.
+      //
+      // The option is typed as the `marked` module rather than as a `Marked`,
+      // so it demands a `getDefaults` that instances do not carry.
+      // `MarkdownManager` never calls it — it uses `use`, `lexer`, `Lexer`,
+      // `defaults` and `setOptions`, all of which an instance has — so the
+      // stricter type is describing the default value, not the contract.
+      marked: new Marked() as unknown as typeof marked,
+      markedOptions: {
+        breaks: true,
+        gfm: true,
+      },
+    }),
+    ShikiCodeBlock.configure({
+      highlighter: getHighlighter,
+      resolveLanguage: toShikiLanguage,
+      themeDark: "github-dark",
+      themeLight: "github-light",
+    }),
+    MermaidBlock.configure({
+      errorKey: mermaidErrorKey,
+    }),
+    BlockMath,
+  ];
+}
 
 /**
  * Everything a surface is allowed to differ by. Anything not listed here is
@@ -73,14 +137,8 @@ export type EditorExtensionOptions = {
  * URLs on both surfaces, and dropping the node would leave that choice silently
  * doing nothing.
  *
- * MermaidBlock and BlockMath are not surface-specific and must never become so.
- * Markdown tokenizers register globally, so once any editor carrying BlockMath
- * exists, every later editor parses `$$...$$` into a blockMath node — and a
- * surface whose schema lacks that node drops it, deleting the text. Registering
- * it on one surface only meant a comment written after a document was opened
- * lost its formula. MermaidBlock defines no node at all; it draws a preview
- * beside a fenced code block, so leaving it out only meant a stored diagram
- * never rendered.
+ * What decides how Markdown parses is not in this table and cannot be — see
+ * `markdownSyntaxExtensions`.
  */
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -118,8 +176,10 @@ export function createEditorExtensions({
   getHighlighter = () => null,
   getMentionMembers = () => [],
   surface = "comment",
+  mentions = true,
+  mermaidErrorKey,
 }: EditorExtensionOptions = {}): AnyExtension[] {
-  const { headingLevels, canUpload, mermaidErrorKey } = SURFACES[surface];
+  const { headingLevels, canUpload } = SURFACES[surface];
 
   return [
     StarterKit.configure({
@@ -137,49 +197,24 @@ export function createEditorExtensions({
         openOnClick: readOnly,
       },
     }),
-    Markdown.configure({
-      // Every editor parses against its own marked instance. Without this
-      // `MarkdownManager` falls back to the module-level singleton that
-      // `marked` exports, and each editor registers its tokenizers on that one
-      // with no way to unregister: constructing a single editor that carries
-      // BlockMath taught every other editor in the page to parse `$$...$$`
-      // into a node their schema did not have, and parsing a node you cannot
-      // hold means dropping it — the formula was deleted on the next save.
-      //
-      // Isolation belongs here rather than at each call site, because a call
-      // site that forgets it silently goes back to sharing the singleton.
-      //
-      // The option is typed as the `marked` module rather than as a `Marked`,
-      // so it demands a `getDefaults` that instances do not carry.
-      // `MarkdownManager` never calls it — it uses `use`, `lexer`, `Lexer`,
-      // `defaults` and `setOptions`, all of which an instance has — so the
-      // stricter type is describing the default value, not the contract.
-      marked: new Marked() as unknown as typeof marked,
-      markedOptions: {
-        breaks: true,
-        gfm: true,
-      },
+    ...markdownSyntaxExtensions({
+      getHighlighter,
+      mermaidErrorKey: mermaidErrorKey ?? SURFACES[surface].mermaidErrorKey,
     }),
-    ShikiCodeBlock.configure({
-      highlighter: getHighlighter,
-      resolveLanguage: toShikiLanguage,
-      themeDark: "github-dark",
-      themeLight: "github-light",
-    }),
-    MermaidBlock.configure({
-      errorKey: mermaidErrorKey,
-    }),
-    BlockMath,
     EmbedBlock,
     // Both upload nodes stay at the position they were declared at before the
-    // two surfaces shared a builder: extension order decides ProseMirror's
-    // schema order, and schema order breaks ties between parse rules.
+    // surfaces shared a builder: extension order decides ProseMirror's schema
+    // order, and schema order breaks ties between parse rules.
     ...(canUpload ? [AttachmentCard] : []),
     KaneoIssueLink,
-    KaneoMention,
-    MentionSuggestion.configure({
-      getMembers: getMentionMembers,
-    }),
+    ...(mentions
+      ? [
+          KaneoMention,
+          MentionSuggestion.configure({
+            getMembers: getMentionMembers,
+          }),
+        ]
+      : []),
     TaskList,
     ...(canUpload
       ? [
