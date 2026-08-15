@@ -52,6 +52,12 @@ export const createDocumentSchema = v.object({
     v.maxLength(TITLE_MAX_LENGTH),
   ),
   content: v.optional(v.string()),
+  /**
+   * Task ids the editor saw in the body. Advisory only — the server re-parses
+   * the body and keeps the intersection, then drops anything outside the
+   * document's workspace.
+   */
+  taskIds: v.optional(v.array(v.string())),
 });
 
 /**
@@ -68,6 +74,12 @@ export const updateDocumentSchema = v.object({
   ),
   content: v.optional(v.nullable(v.string())),
   version: v.pipe(v.number(), v.integer(), v.minValue(1)),
+  /**
+   * Task ids the editor saw in the body. Advisory only — the server re-parses
+   * the body and keeps the intersection, then drops anything outside the
+   * document's workspace.
+   */
+  taskIds: v.optional(v.array(v.string())),
 });
 
 /** 409 body: carries the stored version so the client can refetch and merge. */

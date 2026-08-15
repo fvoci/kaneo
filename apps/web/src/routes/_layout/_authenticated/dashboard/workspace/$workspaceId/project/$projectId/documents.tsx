@@ -93,6 +93,7 @@ function RouteComponent() {
     title: string;
     content: string;
     version: number;
+    taskIds: string[];
   }) => {
     if (!documentId) return;
     updateDocument.mutate(

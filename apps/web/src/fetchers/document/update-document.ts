@@ -20,15 +20,22 @@ async function updateDocument({
   title,
   content,
   version,
+  taskIds,
 }: {
   id: string;
   title: string;
   content?: string | null;
   version: number;
+  taskIds?: string[];
 }) {
   const response = await client.document[":id"].$put({
     param: { id },
-    json: { title, version, ...(content !== undefined ? { content } : {}) },
+    json: {
+      title,
+      version,
+      ...(content !== undefined ? { content } : {}),
+      ...(taskIds ? { taskIds } : {}),
+    },
   });
 
   if (response.status === 409) {

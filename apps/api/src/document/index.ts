@@ -77,12 +77,14 @@ const document = new Hono<{
     async (c) => {
       const userId = requireUserId(c);
       const { projectId } = c.req.valid("param");
-      const { title, content } = c.req.valid("json");
+      const { title, content, taskIds } = c.req.valid("json");
       const created = await createDocument({
         projectId,
         title,
         content,
+        taskIds,
         currentUserId: userId,
+        workspaceId: c.get("workspaceId"),
       });
       return c.json(created);
     },
@@ -140,13 +142,15 @@ const document = new Hono<{
     async (c) => {
       const userId = requireUserId(c);
       const { id } = c.req.valid("param");
-      const { title, content, version } = c.req.valid("json");
+      const { title, content, version, taskIds } = c.req.valid("json");
       const updated = await updateDocument({
         id,
         title,
         content,
         version,
+        taskIds,
         currentUserId: userId,
+        workspaceId: c.get("workspaceId"),
       });
       return c.json(updated);
     },

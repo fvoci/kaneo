@@ -31,6 +31,17 @@ vi.mock("@/components/activity/comment-editor", () => ({
       >
         emit
       </button>
+      <button
+        type="button"
+        data-testid="editor-emit-link"
+        onClick={() =>
+          onChange?.(
+            '본문 <kaneo-issue-link url="https://kaneo.test/dashboard/workspace/w/project/p/task/task-1" issue-key="" task-id="task-1" />',
+          )
+        }
+      >
+        emit link
+      </button>
     </div>
   ),
 }));
@@ -116,6 +127,7 @@ describe("DocumentEditor save wiring", () => {
       title: "제목",
       content: "## 타이핑한 본문\n\n내용",
       version: 1,
+      taskIds: [],
     });
   });
 
@@ -138,6 +150,24 @@ describe("DocumentEditor save wiring", () => {
         content: "## 타이핑한 본문\n\n내용",
         version: 4,
       }),
+    );
+  });
+
+  it("sends the task ids the body links to", async () => {
+    // Cross-references are derived from the body being saved, so the payload
+    // has to carry what the editor just produced.
+    const { getByTestId, saveButton, onSave } = renderEditor({ content: "" });
+
+    await act(async () => {
+      fireEvent.click(getByTestId("editor-emit-link"));
+    });
+    await act(async () => {
+      const button = saveButton();
+      if (button) fireEvent.click(button);
+    });
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ taskIds: ["task-1"] }),
     );
   });
 
