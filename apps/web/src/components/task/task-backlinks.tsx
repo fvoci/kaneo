@@ -22,7 +22,9 @@ import useLinkDocumentTask from "@/hooks/mutations/document/use-link-document-ta
 import useUnlinkDocumentTask from "@/hooks/mutations/document/use-unlink-document-task";
 import { useGetDocuments } from "@/hooks/queries/document/use-get-documents";
 import { useGetTaskDocuments } from "@/hooks/queries/document/use-get-task-documents";
+import useGetProject from "@/hooks/queries/project/use-get-project";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { documentKey } from "@/lib/document-key";
 import { toast } from "@/lib/toast";
 
 type TaskBacklinksProps = {
@@ -48,6 +50,7 @@ export default function TaskBacklinks({
 
   const { data: documents = [] } = useGetTaskDocuments(taskId);
   const { data: projectDocuments = [] } = useGetDocuments(projectId);
+  const { data: project } = useGetProject({ id: projectId, workspaceId });
   const { canManageTasks } = useWorkspacePermission();
   const canEdit = canManageTasks();
 
@@ -66,15 +69,19 @@ export default function TaskBacklinks({
     () =>
       projectDocuments
         .filter((document) => !linkedIds.has(document.id))
-        .map((document) => ({
-          id: document.id,
-          value: document.title,
-          label: document.title || t("documents:untitled"),
-          icon: (
-            <FileText className="size-3.5 shrink-0 text-muted-foreground" />
-          ),
-        })),
-    [projectDocuments, linkedIds, t],
+        .map((document) => {
+          const key = documentKey(project?.slug, document.number);
+          return {
+            id: document.id,
+            value: `${key ?? ""} ${document.title}`,
+            label: document.title || t("documents:untitled"),
+            hint: key,
+            icon: (
+              <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+            ),
+          };
+        }),
+    [projectDocuments, linkedIds, project?.slug, t],
   );
 
   const openDocument = (documentId: string, documentProjectId: string) => {
@@ -138,49 +145,57 @@ export default function TaskBacklinks({
 
         <CollapsibleContent>
           <ul className="mt-1 flex flex-col gap-0.5">
-            {documents.map((document) => (
-              <ContextMenu key={document.id}>
-                <ContextMenuTrigger asChild>
-                  <li>
-                    <Link
-                      to="/dashboard/workspace/$workspaceId/project/$projectId/documents/$documentId"
-                      params={{
-                        workspaceId,
-                        projectId: document.projectId,
-                        documentId: document.id,
-                      }}
-                      className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-accent/50"
-                    >
-                      <FileText className="size-3.5 shrink-0 text-muted-foreground" />
-                      <span className="truncate text-sm">
-                        {document.title || t("documents:untitled")}
-                      </span>
-                    </Link>
-                  </li>
-                </ContextMenuTrigger>
-
-                <ContextMenuContent className="w-40">
-                  <ContextMenuItem
-                    onClick={() =>
-                      openDocument(document.id, document.projectId)
-                    }
-                  >
-                    <span>{t("documents:backlinks.openDocument")}</span>
-                  </ContextMenuItem>
-                  {canEdit && (
-                    <>
-                      <ContextMenuSeparator />
-                      <ContextMenuItem
-                        className="text-destructive"
-                        onClick={() => handleUnlink(document.id)}
+            {documents.map((document) => {
+              const key = documentKey(document.projectSlug, document.number);
+              return (
+                <ContextMenu key={document.id}>
+                  <ContextMenuTrigger asChild>
+                    <li>
+                      <Link
+                        to="/dashboard/workspace/$workspaceId/project/$projectId/documents/$documentId"
+                        params={{
+                          workspaceId,
+                          projectId: document.projectId,
+                          documentId: document.id,
+                        }}
+                        className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-accent/50"
                       >
-                        <span>{t("documents:backlinks.remove")}</span>
-                      </ContextMenuItem>
-                    </>
-                  )}
-                </ContextMenuContent>
-              </ContextMenu>
-            ))}
+                        <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+                        {key && (
+                          <span className="shrink-0 font-mono text-muted-foreground text-xs">
+                            {key}
+                          </span>
+                        )}
+                        <span className="truncate text-sm">
+                          {document.title || t("documents:untitled")}
+                        </span>
+                      </Link>
+                    </li>
+                  </ContextMenuTrigger>
+
+                  <ContextMenuContent className="w-40">
+                    <ContextMenuItem
+                      onClick={() =>
+                        openDocument(document.id, document.projectId)
+                      }
+                    >
+                      <span>{t("documents:backlinks.openDocument")}</span>
+                    </ContextMenuItem>
+                    {canEdit && (
+                      <>
+                        <ContextMenuSeparator />
+                        <ContextMenuItem
+                          className="text-destructive"
+                          onClick={() => handleUnlink(document.id)}
+                        >
+                          <span>{t("documents:backlinks.remove")}</span>
+                        </ContextMenuItem>
+                      </>
+                    )}
+                  </ContextMenuContent>
+                </ContextMenu>
+              );
+            })}
           </ul>
 
           {documents.length === 0 && (

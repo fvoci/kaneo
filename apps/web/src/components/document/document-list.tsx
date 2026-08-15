@@ -8,11 +8,13 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { cn } from "@/lib/cn";
+import { documentKey } from "@/lib/document-key";
 import type { DocumentSummary } from "@/types/document";
 
 type DocumentListProps = {
   documents: DocumentSummary[];
   selectedId: string | undefined;
+  projectSlug: string | undefined;
   canDelete: boolean;
   onSelect: (id: string) => void;
   onDelete: (document: DocumentSummary) => void;
@@ -30,6 +32,7 @@ function formatUpdatedAt(value: string, locale: string) {
 export default function DocumentList({
   documents,
   selectedId,
+  projectSlug,
   canDelete,
   onSelect,
   onDelete,
@@ -40,6 +43,7 @@ export default function DocumentList({
     <ul className="flex flex-col gap-0.5 p-2">
       {documents.map((document) => {
         const isSelected = document.id === selectedId;
+        const key = documentKey(projectSlug, document.number);
         return (
           <ContextMenu key={document.id}>
             <ContextMenuTrigger asChild>
@@ -56,6 +60,11 @@ export default function DocumentList({
                 >
                   <span className="flex items-center gap-1.5">
                     <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+                    {key && (
+                      <span className="shrink-0 font-mono text-muted-foreground text-xs">
+                        {key}
+                      </span>
+                    )}
                     <span className="truncate text-sm">
                       {document.title || t("documents:untitled")}
                     </span>

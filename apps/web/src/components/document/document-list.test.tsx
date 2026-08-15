@@ -23,6 +23,7 @@ const DOCUMENTS = [
     projectId: "p1",
     parentId: null,
     position: "a0",
+    number: 7,
     title: "프로토콜",
     version: 1,
     createdBy: "u1",
@@ -39,6 +40,7 @@ function renderList(props: Record<string, unknown> = {}) {
     <DocumentList
       documents={DOCUMENTS}
       selectedId={undefined}
+      projectSlug="P2"
       canDelete={true}
       onSelect={onSelect}
       onDelete={onDelete}
@@ -54,6 +56,21 @@ async function openRowMenu(title: string) {
 }
 
 describe("DocumentList", () => {
+  it("shows the document key next to the title", () => {
+    // Documents are told apart by their key the way tasks are, so a row of
+    // untitled documents is still distinguishable.
+    renderList();
+
+    expect(screen.getByText("P2-D7")).toBeTruthy();
+  });
+
+  it("leaves the key out until the project slug is known", () => {
+    renderList({ projectSlug: undefined });
+
+    expect(screen.queryByText(/-D7$/)).toBeNull();
+    expect(screen.getByText("프로토콜")).toBeTruthy();
+  });
+
   it("opens a document when its row is clicked", () => {
     const { onSelect } = renderList();
 

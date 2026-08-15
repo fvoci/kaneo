@@ -35,10 +35,13 @@ vi.mock("@/hooks/queries/document/use-get-task-documents", () => ({
 vi.mock("@/hooks/queries/document/use-get-documents", () => ({
   useGetDocuments: () => ({
     data: [
-      { id: "d1", title: "이미 연결된 문서", projectId: "p1" },
-      { id: "d2", title: "아직 연결 안 된 문서", projectId: "p1" },
+      { id: "d1", number: 1, title: "이미 연결된 문서", projectId: "p1" },
+      { id: "d2", number: 2, title: "아직 연결 안 된 문서", projectId: "p1" },
     ],
   }),
+}));
+vi.mock("@/hooks/queries/project/use-get-project", () => ({
+  default: () => ({ data: { slug: "P2" } }),
 }));
 vi.mock("@/hooks/mutations/document/use-link-document-task", () => ({
   default: () => ({ mutate: mocks.link }),
@@ -58,7 +61,7 @@ vi.mock("@/components/common/link-picker", () => ({
     onSelect,
   }: {
     open: boolean;
-    items: Array<{ id: string; label: string }>;
+    items: Array<{ id: string; label: string; hint?: string }>;
     onSelect: (id: string) => void;
   }) =>
     open ? (
@@ -70,6 +73,7 @@ vi.mock("@/components/common/link-picker", () => ({
             data-testid={`candidate-${item.id}`}
             onClick={() => onSelect(item.id)}
           >
+            <span data-testid={`hint-${item.id}`}>{item.hint}</span>
             {item.label}
           </button>
         ))}
@@ -85,6 +89,8 @@ afterEach(() => {
 const LINKED_DOCUMENT = {
   id: "d1",
   projectId: "p1",
+  projectSlug: "P2",
+  number: 1,
   title: "이미 연결된 문서",
   updatedAt: "2026-01-01T00:00:00.000Z",
   linkedAt: "2026-01-01T00:00:00.000Z",
@@ -109,6 +115,29 @@ describe("TaskBacklinks", () => {
     renderPanel();
 
     expect(screen.getByText("이미 연결된 문서")).toBeTruthy();
+  });
+
+  it("shows each document's key, built from its own project", async () => {
+    // A backlink may name a document in another project, so the key comes from
+    // the row rather than from the task's project.
+    mocks.canManageTasks.mockReturnValue(true);
+    mocks.taskDocuments.mockReturnValue({
+      data: [{ ...LINKED_DOCUMENT, projectSlug: "OPS", number: 4 }],
+    });
+
+    renderPanel();
+
+    expect(screen.getByText("OPS-D4")).toBeTruthy();
+  });
+
+  it("offers picker candidates by key", () => {
+    mocks.canManageTasks.mockReturnValue(true);
+    mocks.taskDocuments.mockReturnValue({ data: [] });
+
+    renderPanel();
+    fireEvent.click(screen.getByLabelText("documents:backlinks.add"));
+
+    expect(screen.getByTestId("hint-d2").textContent).toBe("P2-D2");
   });
 
   it("renders the section even with nothing linked", () => {

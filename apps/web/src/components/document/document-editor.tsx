@@ -7,6 +7,8 @@ import DocumentTaskReferences from "@/components/document/document-task-referenc
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import useGetProject from "@/hooks/queries/project/use-get-project";
+import { documentKey } from "@/lib/document-key";
 import type { Document } from "@/types/document";
 
 type DocumentEditorProps = {
@@ -27,6 +29,11 @@ export default function DocumentEditor({
   onReloadAfterConflict,
 }: DocumentEditorProps) {
   const { t } = useTranslation();
+  const { data: project } = useGetProject({
+    id: document.projectId,
+    workspaceId,
+  });
+  const key = documentKey(project?.slug, document.number);
   const [title, setTitle] = useState(document.title);
   const [content, setContent] = useState(document.content ?? "");
   // Markdown that the rich editor cannot represent survives a save only if the
@@ -55,6 +62,11 @@ export default function DocumentEditor({
       ) : null}
 
       <div className="flex items-center gap-2 border-border/80 border-b px-4 py-2">
+        {key && (
+          <span className="shrink-0 font-mono text-muted-foreground text-xs">
+            {key}
+          </span>
+        )}
         <Input
           value={title}
           onChange={(event) => setTitle(event.target.value)}

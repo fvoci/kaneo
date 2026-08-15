@@ -46,6 +46,10 @@ vi.mock("@/components/activity/comment-editor", () => ({
   ),
 }));
 
+vi.mock("@/hooks/queries/project/use-get-project", () => ({
+  default: () => ({ data: { slug: "P2" } }),
+}));
+
 vi.mock("@/components/document/document-task-references", () => ({
   default: () => <div data-testid="task-references" />,
 }));
@@ -61,6 +65,7 @@ function makeDocument(overrides: Record<string, unknown> = {}) {
     title: "제목",
     content: "",
     version: 1,
+    number: 3,
     createdBy: "u1",
     updatedBy: "u1",
     archivedAt: null,
@@ -173,6 +178,11 @@ describe("DocumentEditor save wiring", () => {
     const [draft] = onSave.mock.calls[0];
     expect(draft.content).toContain('task-id="task-1"');
     expect(Object.keys(draft).sort()).toEqual(["content", "title", "version"]);
+  });
+
+  it("shows the document key in the header", () => {
+    const { getByText } = renderEditor();
+    expect(getByText("P2-D3")).toBeTruthy();
   });
 
   it("hands the stored body to the editor on open", () => {

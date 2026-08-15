@@ -132,6 +132,7 @@ function RouteComponent() {
               <DocumentList
                 documents={documents ?? []}
                 selectedId={selectedId}
+                projectSlug={project?.slug}
                 canDelete={canManageTasks()}
                 onSelect={openDocument}
                 onDelete={setDeleteTarget}
