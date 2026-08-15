@@ -2227,7 +2227,15 @@
 		},
 		"backlinks": {
 			"title": "Referenced by",
-			"empty": "No documents reference this task yet."
+			"add": "Связать документ",
+			"empty": "No documents reference this task yet.",
+			"openDocument": "Открыть документ",
+			"remove": "Удалить ссылку",
+			"documentsInProject": "Документы проекта",
+			"searchPlaceholder": "Поиск документов для связывания...",
+			"noDocumentsFound": "Документы не найдены",
+			"linkFailed": "Не удалось связать документ.",
+			"unlinkFailed": "Не удалось удалить ссылку."
 		},
 		"references": {
 			"title": "Ссылки",

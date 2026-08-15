@@ -107,7 +107,11 @@ export default function TaskDetailsContent({
       </div>
       {taskId && (
         <div className="mt-2">
-          <TaskBacklinks taskId={taskId} workspaceId={workspaceId} />
+          <TaskBacklinks
+            taskId={taskId}
+            projectId={projectId}
+            workspaceId={workspaceId}
+          />
         </div>
       )}
       <span className="text-sm font-medium text-muted-foreground h-[1px] bg-border w-full block shrink-0" />

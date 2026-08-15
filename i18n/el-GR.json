@@ -2157,7 +2157,15 @@
 		},
 		"backlinks": {
 			"title": "Referenced by",
-			"empty": "No documents reference this task yet."
+			"add": "Σύνδεση εγγράφου",
+			"empty": "No documents reference this task yet.",
+			"openDocument": "Άνοιγμα εγγράφου",
+			"remove": "Αφαίρεση αναφοράς",
+			"documentsInProject": "Έγγραφα στο έργο",
+			"searchPlaceholder": "Αναζήτηση εγγράφων για σύνδεση...",
+			"noDocumentsFound": "Δεν βρέθηκαν έγγραφα",
+			"linkFailed": "Δεν ήταν δυνατή η σύνδεση του εγγράφου.",
+			"unlinkFailed": "Δεν ήταν δυνατή η αφαίρεση της αναφοράς."
 		},
 		"references": {
 			"title": "Αναφορές",

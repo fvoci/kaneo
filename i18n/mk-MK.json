@@ -2157,7 +2157,15 @@
 		},
 		"backlinks": {
 			"title": "Referenced by",
-			"empty": "No documents reference this task yet."
+			"add": "Поврзи документ",
+			"empty": "No documents reference this task yet.",
+			"openDocument": "Отвори документ",
+			"remove": "Отстрани референца",
+			"documentsInProject": "Документи во проектот",
+			"searchPlaceholder": "Пребарај документи за поврзување...",
+			"noDocumentsFound": "Не се најдени документи",
+			"linkFailed": "Документот не можеше да се поврзе.",
+			"unlinkFailed": "Референцата не можеше да се отстрани."
 		},
 		"references": {
 			"title": "Референци",

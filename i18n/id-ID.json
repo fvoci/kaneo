@@ -2157,7 +2157,15 @@
 		},
 		"backlinks": {
 			"title": "Referenced by",
-			"empty": "No documents reference this task yet."
+			"add": "Tautkan dokumen",
+			"empty": "No documents reference this task yet.",
+			"openDocument": "Buka dokumen",
+			"remove": "Hapus referensi",
+			"documentsInProject": "Dokumen dalam proyek",
+			"searchPlaceholder": "Cari dokumen untuk ditautkan...",
+			"noDocumentsFound": "Dokumen tidak ditemukan",
+			"linkFailed": "Tidak dapat menautkan dokumen.",
+			"unlinkFailed": "Tidak dapat menghapus referensi."
 		},
 		"references": {
 			"title": "Referensi",

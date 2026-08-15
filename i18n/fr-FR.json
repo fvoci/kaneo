@@ -2157,7 +2157,15 @@
 		},
 		"backlinks": {
 			"title": "Referenced by",
-			"empty": "No documents reference this task yet."
+			"add": "Lier un document",
+			"empty": "No documents reference this task yet.",
+			"openDocument": "Ouvrir le document",
+			"remove": "Supprimer la référence",
+			"documentsInProject": "Documents du projet",
+			"searchPlaceholder": "Rechercher des documents à lier...",
+			"noDocumentsFound": "Aucun document trouvé",
+			"linkFailed": "Impossible de lier le document.",
+			"unlinkFailed": "Impossible de supprimer la référence."
 		},
 		"references": {
 			"title": "Références",

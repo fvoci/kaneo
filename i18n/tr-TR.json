@@ -2157,7 +2157,15 @@
 		},
 		"backlinks": {
 			"title": "Referenced by",
-			"empty": "No documents reference this task yet."
+			"add": "Belge bağla",
+			"empty": "No documents reference this task yet.",
+			"openDocument": "Belgeyi aç",
+			"remove": "Referansı kaldır",
+			"documentsInProject": "Projedeki belgeler",
+			"searchPlaceholder": "Bağlanacak belgeleri ara...",
+			"noDocumentsFound": "Belge bulunamadı",
+			"linkFailed": "Belge bağlanamadı.",
+			"unlinkFailed": "Referans kaldırılamadı."
 		},
 		"references": {
 			"title": "Referanslar",

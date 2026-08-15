@@ -2157,7 +2157,15 @@
 		},
 		"backlinks": {
 			"title": "Referenced by",
-			"empty": "No documents reference this task yet."
+			"add": "Document koppelen",
+			"empty": "No documents reference this task yet.",
+			"openDocument": "Document openen",
+			"remove": "Verwijzing verwijderen",
+			"documentsInProject": "Documenten in project",
+			"searchPlaceholder": "Zoek documenten om te koppelen...",
+			"noDocumentsFound": "Geen documenten gevonden",
+			"linkFailed": "Kon het document niet koppelen.",
+			"unlinkFailed": "Kon de verwijzing niet verwijderen."
 		},
 		"references": {
 			"title": "Verwijzingen",

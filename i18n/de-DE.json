@@ -2157,7 +2157,15 @@
 		},
 		"backlinks": {
 			"title": "Referenced by",
-			"empty": "No documents reference this task yet."
+			"add": "Dokument verknüpfen",
+			"empty": "No documents reference this task yet.",
+			"openDocument": "Dokument öffnen",
+			"remove": "Verweis entfernen",
+			"documentsInProject": "Dokumente im Projekt",
+			"searchPlaceholder": "Dokumente zum Verknüpfen suchen...",
+			"noDocumentsFound": "Keine Dokumente gefunden",
+			"linkFailed": "Das Dokument konnte nicht verknüpft werden.",
+			"unlinkFailed": "Der Verweis konnte nicht entfernt werden."
 		},
 		"references": {
 			"title": "Verweise",

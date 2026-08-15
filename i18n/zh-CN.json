@@ -2157,7 +2157,15 @@
 		},
 		"backlinks": {
 			"title": "Referenced by",
-			"empty": "No documents reference this task yet."
+			"add": "关联文档",
+			"empty": "No documents reference this task yet.",
+			"openDocument": "打开文档",
+			"remove": "移除引用",
+			"documentsInProject": "项目中的文档",
+			"searchPlaceholder": "搜索要关联的文档...",
+			"noDocumentsFound": "未找到文档",
+			"linkFailed": "无法关联该文档。",
+			"unlinkFailed": "无法移除该引用。"
 		},
 		"references": {
 			"title": "引用",

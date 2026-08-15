@@ -2157,7 +2157,15 @@
 		},
 		"backlinks": {
 			"title": "Referenced by",
-			"empty": "No documents reference this task yet."
+			"add": "दस्तावेज़ लिंक करें",
+			"empty": "No documents reference this task yet.",
+			"openDocument": "दस्तावेज़ खोलें",
+			"remove": "संदर्भ हटाएं",
+			"documentsInProject": "प्रोजेक्ट के दस्तावेज़",
+			"searchPlaceholder": "लिंक करने के लिए दस्तावेज़ खोजें...",
+			"noDocumentsFound": "कोई दस्तावेज़ नहीं मिला",
+			"linkFailed": "दस्तावेज़ लिंक नहीं किया जा सका।",
+			"unlinkFailed": "संदर्भ हटाया नहीं जा सका।"
 		},
 		"references": {
 			"title": "संदर्भ",

@@ -2171,7 +2171,15 @@
 		},
 		"backlinks": {
 			"title": "Referenced by",
-			"empty": "No documents reference this task yet."
+			"add": "Пов'язати документ",
+			"empty": "No documents reference this task yet.",
+			"openDocument": "Відкрити документ",
+			"remove": "Видалити посилання",
+			"documentsInProject": "Документи проєкту",
+			"searchPlaceholder": "Пошук документів для зв'язування...",
+			"noDocumentsFound": "Документів не знайдено",
+			"linkFailed": "Не вдалося пов'язати документ.",
+			"unlinkFailed": "Не вдалося видалити посилання."
 		},
 		"references": {
 			"title": "Посилання",

@@ -8504,11 +8504,46 @@
 						"title": {
 							"type": "string"
 						},
+						"add": {
+							"type": "string"
+						},
 						"empty": {
+							"type": "string"
+						},
+						"openDocument": {
+							"type": "string"
+						},
+						"remove": {
+							"type": "string"
+						},
+						"documentsInProject": {
+							"type": "string"
+						},
+						"searchPlaceholder": {
+							"type": "string"
+						},
+						"noDocumentsFound": {
+							"type": "string"
+						},
+						"linkFailed": {
+							"type": "string"
+						},
+						"unlinkFailed": {
 							"type": "string"
 						}
 					},
-					"required": ["title", "empty"]
+					"required": [
+						"title",
+						"add",
+						"empty",
+						"openDocument",
+						"remove",
+						"documentsInProject",
+						"searchPlaceholder",
+						"noDocumentsFound",
+						"linkFailed",
+						"unlinkFailed"
+					]
 				},
 				"references": {
 					"type": "object",

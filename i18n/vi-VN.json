@@ -2157,7 +2157,15 @@
 		},
 		"backlinks": {
 			"title": "Referenced by",
-			"empty": "No documents reference this task yet."
+			"add": "Liên kết tài liệu",
+			"empty": "No documents reference this task yet.",
+			"openDocument": "Mở tài liệu",
+			"remove": "Gỡ tham chiếu",
+			"documentsInProject": "Tài liệu trong dự án",
+			"searchPlaceholder": "Tìm tài liệu để liên kết...",
+			"noDocumentsFound": "Không tìm thấy tài liệu",
+			"linkFailed": "Không thể liên kết tài liệu.",
+			"unlinkFailed": "Không thể gỡ tham chiếu."
 		},
 		"references": {
 			"title": "Tham chiếu",
