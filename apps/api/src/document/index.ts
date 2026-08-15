@@ -9,6 +9,7 @@ import getDocumentTasks from "./controllers/get-document-tasks";
 import getDocuments from "./controllers/get-documents";
 import getTaskDocuments from "./controllers/get-task-documents";
 import linkDocumentTask from "./controllers/link-document-task";
+import moveDocument from "./controllers/move-document";
 import unlinkDocumentTask from "./controllers/unlink-document-task";
 import updateDocument from "./controllers/update-document";
 import {
@@ -24,6 +25,7 @@ import {
   documentTaskListSchema,
   documentVersionConflictSchema,
   linkDocumentTaskSchema,
+  moveDocumentSchema,
   updateDocumentSchema,
 } from "./schemas";
 
@@ -205,6 +207,45 @@ const document = new Hono<{
         currentUserId: userId,
       });
       return c.json(removed);
+    },
+  )
+  .put(
+    "/:id/move",
+    describeRoute({
+      operationId: "moveDocument",
+      tags: ["Documents"],
+      description:
+        "Move a document under a new parent, to a new rank among its siblings, or both. Positions are derived server-side; the request only says where the document should land.",
+      responses: {
+        200: {
+          description: "Document moved successfully",
+          content: {
+            "application/json": { schema: resolver(documentSchema) },
+          },
+        },
+        400: {
+          description: "The parent belongs to a different project",
+        },
+        409: {
+          description:
+            "The move would put a document inside itself, or nest deeper than the tree allows",
+        },
+      },
+    }),
+    validator("param", documentIdParamSchema),
+    validator("json", moveDocumentSchema),
+    requireDocumentAccess.fromDocumentId("update"),
+    async (c) => {
+      const userId = requireUserId(c);
+      const { id } = c.req.valid("param");
+      const { parentId, position } = c.req.valid("json");
+      const moved = await moveDocument({
+        id,
+        parentId,
+        position,
+        currentUserId: userId,
+      });
+      return c.json(moved);
     },
   )
   .get(

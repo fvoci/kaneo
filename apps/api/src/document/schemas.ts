@@ -74,6 +74,17 @@ export const updateDocumentSchema = v.object({
   version: v.pipe(v.number(), v.integer(), v.minValue(1)),
 });
 
+/**
+ * Where the document should end up. `position` expresses a rank among the
+ * destination's visible siblings and nothing more — the server derives every
+ * stored position from it — so it only has to be a sane index. `parentId` of
+ * `null` means the root of the project.
+ */
+export const moveDocumentSchema = v.object({
+  parentId: v.nullable(v.string()),
+  position: v.pipe(v.number(), v.integer(), v.minValue(0)),
+});
+
 /** 409 body: carries the stored version so the client can refetch and merge. */
 export const documentVersionConflictSchema = v.object({
   message: v.string(),

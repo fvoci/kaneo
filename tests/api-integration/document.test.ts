@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import claimDocumentNumber from "../../apps/api/src/document/controllers/claim-document-number";
@@ -51,6 +51,18 @@ function updateDocument(
 
 function deleteDocument(app: App, id: string) {
   return app.request(`/api/document/${id}`, { method: "DELETE" });
+}
+
+function moveDocument(
+  app: App,
+  id: string,
+  body: { parentId: string | null; position: number },
+) {
+  return app.request(`/api/document/${id}/move`, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
 }
 
 type DeletedEvent = { affectedProjectIds?: string[] };
@@ -527,6 +539,13 @@ describe("API integration: documents", () => {
 
     // A restore will tell one archive operation from another by the timestamp
     // it wrote, so everything archived together has to carry the same one.
+    //
+    // What this actually guards is that the subtree is written by one UPDATE.
+    // Hoisting the `new Date()` out of the `.set()` does not change anything on
+    // its own — a single statement evaluates it once no matter where it is
+    // written — so this test cannot fail from that. Rewriting the update as a
+    // loop over the ids is what splits the timestamps, and that is the change
+    // this catches.
     it("stamps the whole subtree with a single archivedAt", async () => {
       const member = await createWorkspaceMember({ role: "admin" });
       const { project } = await createProjectFixture({
@@ -804,6 +823,388 @@ describe("API integration: documents", () => {
       const { app } = createApp();
 
       expect((await deleteDocument(app, document.id)).status).toBe(200);
+    });
+  });
+
+  describe("moving in the tree", () => {
+    async function tree(projectId: string) {
+      const root = await seedDocument(projectId, {
+        title: "Root",
+        position: 0,
+      });
+      const child = await seedDocument(projectId, {
+        title: "Child",
+        parentId: root.id,
+        position: 0,
+      });
+      const grandchild = await seedDocument(projectId, {
+        title: "Grandchild",
+        parentId: child.id,
+        position: 0,
+      });
+      return { root, child, grandchild };
+    }
+
+    const positionsUnder = async (projectId: string, parentId: string | null) =>
+      db
+        .select({
+          id: schema.documentTable.id,
+          position: schema.documentTable.position,
+        })
+        .from(schema.documentTable)
+        .where(
+          and(
+            eq(schema.documentTable.projectId, projectId),
+            parentId === null
+              ? isNull(schema.documentTable.parentId)
+              : eq(schema.documentTable.parentId, parentId),
+            isNull(schema.documentTable.archivedAt),
+          ),
+        )
+        .orderBy(asc(schema.documentTable.position));
+
+    it("refuses to move a document inside its own descendant", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const { root, grandchild } = await tree(project.id);
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const response = await moveDocument(app, root.id, {
+        parentId: grandchild.id,
+        position: 0,
+      });
+
+      // The message matters as much as the status here. A move into your own
+      // descendant is always too deep as well, so the depth check answers 409
+      // too — asserting only the code would let the cycle check be deleted
+      // without a single test noticing.
+      expect(response.status).toBe(409);
+      expect(await response.text()).toContain("inside itself");
+    });
+
+    it("refuses to move a document under itself", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const { root } = await tree(project.id);
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const response = await moveDocument(app, root.id, {
+        parentId: root.id,
+        position: 0,
+      });
+
+      expect(response.status).toBe(409);
+      expect(await response.text()).toContain("inside itself");
+    });
+
+    it("refuses a parent from another project", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const a = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const b = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const mine = await seedDocument(a.project.id);
+      const theirs = await seedDocument(b.project.id);
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const response = await moveDocument(app, mine.id, {
+        parentId: theirs.id,
+        position: 0,
+      });
+
+      expect(response.status).toBe(400);
+    });
+
+    // Both sides of the cap. Writing the limit as `< MAX_DEPTH` instead of
+    // `<= MAX_DEPTH` still rejects the fourth level, so only the first of these
+    // catches it.
+    it("allows a move that lands exactly at the depth limit", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const { child } = await tree(project.id);
+      const loose = await seedDocument(project.id, { title: "Loose" });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      // Loose has no children, so under Child it sits at level three.
+      const response = await moveDocument(app, loose.id, {
+        parentId: child.id,
+        position: 0,
+      });
+
+      expect(response.status).toBe(200);
+    });
+
+    it("refuses a move that would land a fourth level deep", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const { grandchild } = await tree(project.id);
+      const loose = await seedDocument(project.id, { title: "Loose" });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const response = await moveDocument(app, loose.id, {
+        parentId: grandchild.id,
+        position: 0,
+      });
+
+      expect(response.status).toBe(409);
+      expect(await response.text()).toContain("levels deep");
+    });
+
+    // The document's own depth is fine; what busts the limit is the subtree it
+    // brings with it.
+    it("counts the subtree a move carries, not just the document", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const { child } = await tree(project.id);
+      const branchRoot = await seedDocument(project.id, { title: "Branch" });
+      await seedDocument(project.id, {
+        title: "Branch leaf",
+        parentId: branchRoot.id,
+      });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      // Branch alone would fit under Child at level three; its leaf would not.
+      const response = await moveDocument(app, branchRoot.id, {
+        parentId: child.id,
+        position: 0,
+      });
+
+      expect(response.status).toBe(409);
+      expect(await response.text()).toContain("levels deep");
+    });
+
+    // The invariant the cascade established: a parent nobody can see is a
+    // parent nobody can move under.
+    it("refuses to move under an archived parent", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const gone = await seedDocument(project.id, { archivedAt: new Date() });
+      const mover = await seedDocument(project.id);
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const response = await moveDocument(app, mover.id, {
+        parentId: gone.id,
+        position: 0,
+      });
+
+      expect(response.status).toBe(404);
+    });
+
+    it("refuses to move an archived document", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const gone = await seedDocument(project.id, { archivedAt: new Date() });
+      const parent = await seedDocument(project.id);
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const response = await moveDocument(app, gone.id, {
+        parentId: parent.id,
+        position: 0,
+      });
+
+      expect(response.status).toBe(404);
+    });
+
+    it("renumbers the group it left as well as the one it joined", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const parent = await seedDocument(project.id, { title: "Parent" });
+      const a = await seedDocument(project.id, {
+        title: "A",
+        parentId: parent.id,
+        position: 0,
+      });
+      const b = await seedDocument(project.id, {
+        title: "B",
+        parentId: parent.id,
+        position: 1,
+      });
+      const c = await seedDocument(project.id, {
+        title: "C",
+        parentId: parent.id,
+        position: 2,
+      });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      // A leaves the middle group entirely and lands at the front of the roots.
+      expect(
+        (await moveDocument(app, a.id, { parentId: null, position: 0 })).status,
+      ).toBe(200);
+
+      const left = await positionsUnder(project.id, parent.id);
+      expect(left.map((row) => row.id)).toEqual([b.id, c.id]);
+      expect(left.map((row) => row.position)).toEqual([0, 1]);
+
+      const joined = await positionsUnder(project.id, null);
+      expect(joined.map((row) => row.id)).toEqual([a.id, parent.id]);
+      expect(joined.map((row) => row.position)).toEqual([0, 1]);
+    });
+
+    it("reorders within a group without changing the parent", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const first = await seedDocument(project.id, {
+        title: "First",
+        position: 0,
+      });
+      const second = await seedDocument(project.id, {
+        title: "Second",
+        position: 1,
+      });
+      const third = await seedDocument(project.id, {
+        title: "Third",
+        position: 2,
+      });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      await moveDocument(app, third.id, { parentId: null, position: 0 });
+
+      const roots = await positionsUnder(project.id, null);
+      expect(roots.map((row) => row.id)).toEqual([
+        third.id,
+        first.id,
+        second.id,
+      ]);
+      expect(roots.map((row) => row.position)).toEqual([0, 1, 2]);
+    });
+
+    // Archived rows are not part of the ordering a reader manipulates, so a
+    // move must not rewrite their rank.
+    it("leaves an archived sibling's position alone", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const gone = await seedDocument(project.id, {
+        position: 7,
+        archivedAt: new Date(),
+      });
+      const a = await seedDocument(project.id, { position: 0 });
+      const b = await seedDocument(project.id, { position: 1 });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      await moveDocument(app, b.id, { parentId: null, position: 0 });
+
+      const [stored] = await db
+        .select({ position: schema.documentTable.position })
+        .from(schema.documentTable)
+        .where(eq(schema.documentTable.id, gone.id));
+      expect(stored?.position).toBe(7);
+
+      const roots = await positionsUnder(project.id, null);
+      expect(roots.map((row) => row.id)).toEqual([b.id, a.id]);
+    });
+
+    it("clamps a position past the end of the group", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const a = await seedDocument(project.id, { position: 0 });
+      const b = await seedDocument(project.id, { position: 1 });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      expect(
+        (await moveDocument(app, a.id, { parentId: null, position: 999 }))
+          .status,
+      ).toBe(200);
+
+      const roots = await positionsUnder(project.id, null);
+      expect(roots.map((row) => row.id)).toEqual([b.id, a.id]);
+      expect(roots.map((row) => row.position)).toEqual([0, 1]);
+    });
+
+    // This does not prove the advisory lock: it passes with the lock removed
+    // too, because the race is too narrow to hit from here. What it does hold
+    // is the invariant the lock is there to protect — whatever order two
+    // concurrent moves settle on, the group is still numbered 0..n-1 with no
+    // duplicates. The lock itself rests on the same reasoning `createProject`
+    // documents, and on `createDocument` already taking the same key.
+    it("leaves the group numbered 0..n-1 after concurrent moves", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const a = await seedDocument(project.id, { position: 0 });
+      const b = await seedDocument(project.id, { position: 1 });
+      const c = await seedDocument(project.id, { position: 2 });
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      await Promise.all([
+        moveDocument(app, a.id, { parentId: null, position: 2 }),
+        moveDocument(app, c.id, { parentId: null, position: 0 }),
+      ]);
+
+      // Whichever won, the group is still a clean 0..n-1 with no duplicates.
+      const roots = await positionsUnder(project.id, null);
+      expect(roots.map((row) => row.position)).toEqual([0, 1, 2]);
+      expect(new Set(roots.map((row) => row.id)).size).toBe(3);
+      expect(roots.map((row) => row.id)).toContain(b.id);
+    });
+
+    it("blocks a viewer from moving a document", async () => {
+      const member = await createWorkspaceMember({ role: "viewer" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const { root, child } = await tree(project.id);
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      expect(
+        (await moveDocument(app, child.id, { parentId: null, position: 0 }))
+          .status,
+      ).toBe(403);
+      expect(root).toBeTruthy();
+    });
+
+    it("blocks moving a document in another workspace", async () => {
+      const victim = await createWorkspaceMember({ role: "admin" });
+      const attacker = await createWorkspaceMember({ role: "admin" });
+      const { project } = await createProjectFixture({
+        workspaceId: victim.workspace.id,
+      });
+      const document = await seedDocument(project.id);
+      mockAuthenticatedSession(attacker.user);
+      const { app } = createApp();
+
+      expect(
+        (await moveDocument(app, document.id, { parentId: null, position: 0 }))
+          .status,
+      ).toBe(403);
     });
   });
 
