@@ -9,6 +9,7 @@ import TableRow from "@tiptap/extension-table-row";
 import TaskList from "@tiptap/extension-task-list";
 import { Markdown } from "@tiptap/markdown";
 import StarterKit from "@tiptap/starter-kit";
+import { Marked, type marked } from "marked";
 import { bundledLanguages, type Highlighter } from "shiki";
 import { AttachmentCard } from "@/components/task/extensions/attachment-card";
 import { EmbedBlock } from "@/components/task/extensions/embed-block";
@@ -137,6 +138,23 @@ export function createEditorExtensions({
       },
     }),
     Markdown.configure({
+      // Every editor parses against its own marked instance. Without this
+      // `MarkdownManager` falls back to the module-level singleton that
+      // `marked` exports, and each editor registers its tokenizers on that one
+      // with no way to unregister: constructing a single editor that carries
+      // BlockMath taught every other editor in the page to parse `$$...$$`
+      // into a node their schema did not have, and parsing a node you cannot
+      // hold means dropping it — the formula was deleted on the next save.
+      //
+      // Isolation belongs here rather than at each call site, because a call
+      // site that forgets it silently goes back to sharing the singleton.
+      //
+      // The option is typed as the `marked` module rather than as a `Marked`,
+      // so it demands a `getDefaults` that instances do not carry.
+      // `MarkdownManager` never calls it — it uses `use`, `lexer`, `Lexer`,
+      // `defaults` and `setOptions`, all of which an instance has — so the
+      // stricter type is describing the default value, not the contract.
+      marked: new Marked() as unknown as typeof marked,
       markedOptions: {
         breaks: true,
         gfm: true,

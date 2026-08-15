@@ -1,5 +1,7 @@
 import type { AnyExtension } from "@tiptap/core";
 import { Editor } from "@tiptap/core";
+import { Markdown } from "@tiptap/markdown";
+import StarterKit from "@tiptap/starter-kit";
 import { describe, expect, it } from "vitest";
 import {
   createDocumentExtensions,
@@ -246,6 +248,34 @@ describe("extension sets are well formed", () => {
       "image",
     ]);
     expect([...document].filter((name) => !comment.has(name))).toEqual([]);
+  });
+
+  // `MarkdownManager` falls back to the singleton `marked` exports, and
+  // tokenizers registered on it cannot be removed. One editor carrying
+  // BlockMath therefore used to teach every other editor on the page to parse
+  // `$$...$$` into a node their schema did not have, and a node you cannot
+  // hold is dropped — which deleted the formula from whatever was saved next.
+  //
+  // The editor below is deliberately built by hand, deliberately lacks
+  // BlockMath, and deliberately leaves `marked` unset so it parses against the
+  // shared singleton — exactly the shape every surface has before someone
+  // routes it through this file. If it still round-trips a formula after our
+  // editors have been constructed, then nothing we build reaches across into
+  // anyone else's parser.
+  it("does not teach a foreign editor to parse maths it cannot hold", () => {
+    const foreign = () => [
+      StarterKit.configure({ trailingNode: false }),
+      Markdown.configure({ markedOptions: { breaks: true, gfm: true } }),
+    ];
+    const formula = "$$\nE=mc^2\n$$";
+
+    const before = roundTripWith(foreign(), formula, 1);
+    expect(before).toContain("E=mc^2");
+
+    roundTripWith(createDocumentExtensions(), formula, 1);
+    roundTripWith(createEditorExtensions(), formula, 1);
+
+    expect(roundTripWith(foreign(), formula, 4)).toBe(before);
   });
 
   // Extension order becomes ProseMirror's schema order, which breaks ties
