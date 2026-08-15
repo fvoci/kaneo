@@ -1,18 +1,8 @@
 import type { Editor } from "@tiptap/core";
-import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
-import Placeholder from "@tiptap/extension-placeholder";
-import { Table } from "@tiptap/extension-table";
-import TableCell from "@tiptap/extension-table-cell";
-import TableHeader from "@tiptap/extension-table-header";
-import TableRow from "@tiptap/extension-table-row";
-import TaskList from "@tiptap/extension-task-list";
-import { Markdown } from "@tiptap/markdown";
 import { Fragment, Slice } from "@tiptap/pm/model";
 import { TextSelection } from "@tiptap/pm/state";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
-import StarterKit from "@tiptap/starter-kit";
 import {
   BetweenHorizontalEnd,
   BetweenHorizontalStart,
@@ -36,19 +26,9 @@ import {
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { bundledLanguages, type Highlighter } from "shiki";
-import { AttachmentCard } from "@/components/task/extensions/attachment-card";
-import { EmbedBlock } from "@/components/task/extensions/embed-block";
-import { KaneoIssueLink } from "@/components/task/extensions/kaneo-issue-link";
-import { KaneoMention } from "@/components/task/extensions/kaneo-mention";
+import type { Highlighter } from "shiki";
 import type { MentionMember } from "@/components/task/extensions/mention-list";
-import { MentionSuggestion } from "@/components/task/extensions/mention-suggestion";
-import { MermaidBlock } from "@/components/task/extensions/mermaid-block";
-import {
-  SHIKI_CODEBLOCK_REFRESH_META,
-  ShikiCodeBlock,
-} from "@/components/task/extensions/shiki-code-block";
-import { TaskItemWithCheckbox } from "@/components/task/extensions/task-item-with-checkbox";
+import { SHIKI_CODEBLOCK_REFRESH_META } from "@/components/task/extensions/shiki-code-block";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogPopup } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -63,6 +43,11 @@ import {
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { cn } from "@/lib/cn";
+import {
+  createEditorExtensions,
+  normalizeMarkdown,
+  toShikiLanguage,
+} from "@/lib/editor-extensions";
 import { parseTaskListMarkdownToNodes } from "@/lib/editor-task-list-paste";
 import {
   extractIssueKeyFromUrl,
@@ -146,19 +131,6 @@ const CODE_LANG_VALUES = [
 ] as const;
 
 type EmbedComposerErrorKey = "embedErrorInvalidUrl" | "embedErrorYoutubeOnly";
-
-const COMMENT_SHIKI_LANGUAGE_ALIASES: Record<string, string> = {
-  plaintext: "text",
-};
-
-function normalizeMarkdown(markdown: string) {
-  return markdown
-    .replace(/\r\n/g, "\n")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\u00A0/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .replace(/\n{2,}$/g, "\n");
-}
 
 type EmbedComposerState = {
   mode: "choice" | "input";
@@ -253,20 +225,6 @@ export default function CommentEditor({
         label: t(`activity:comment.editor.codeLang.${value}`),
       })),
     [t],
-  );
-  const availableShikiLanguages = useMemo(
-    () => new Set(Object.keys(bundledLanguages)),
-    [],
-  );
-  const toShikiLanguage = useCallback(
-    (language: string) => {
-      const normalized = language.toLowerCase();
-      const alias = COMMENT_SHIKI_LANGUAGE_ALIASES[normalized];
-      if (alias) return alias;
-      if (availableShikiLanguages.has(normalized)) return normalized;
-      return "text";
-    },
-    [availableShikiLanguages],
   );
   const getOverlayPosition = useCallback(
     (editorView: Editor["view"], pos: number) => {
@@ -598,62 +556,12 @@ export default function CommentEditor({
       immediatelyRender: false,
       autofocus: autoFocus,
       editable: !readOnly && !disabled,
-      extensions: [
-        StarterKit.configure({
-          heading: { levels: [1, 2, 3] },
-          trailingNode: false,
-          codeBlock: {
-            HTMLAttributes: { class: "kaneo-tiptap-codeblock" },
-          },
-        }),
-        Link.configure({
-          autolink: true,
-          defaultProtocol: "https",
-          linkOnPaste: true,
-          openOnClick: readOnly,
-        }),
-        Markdown.configure({
-          markedOptions: {
-            breaks: true,
-            gfm: true,
-          },
-        }),
-        ShikiCodeBlock.configure({
-          highlighter: () => shikiHighlighterRef.current,
-          resolveLanguage: toShikiLanguage,
-          themeDark: "github-dark",
-          themeLight: "github-light",
-        }),
-        MermaidBlock.configure({
-          errorKey: "activity:comment.editor.mermaid.renderFailed",
-        }),
-        EmbedBlock,
-        AttachmentCard,
-        KaneoIssueLink,
-        KaneoMention,
-        MentionSuggestion.configure({
-          getMembers: () => mentionMembersRef.current,
-        }),
-        TaskList,
-        Image.configure({
-          HTMLAttributes: {
-            class: "kaneo-editor-image",
-            loading: "lazy",
-          },
-        }),
-        TaskItemWithCheckbox.configure({
-          nested: true,
-        }),
-        Placeholder.configure({
-          placeholder: resolvedPlaceholder,
-        }),
-        Table.configure({
-          resizable: true,
-        }),
-        TableRow,
-        TableHeader,
-        TableCell,
-      ],
+      extensions: createEditorExtensions({
+        readOnly,
+        placeholder: resolvedPlaceholder,
+        getHighlighter: () => shikiHighlighterRef.current,
+        getMentionMembers: () => mentionMembersRef.current,
+      }),
       editorProps: {
         attributes: {
           class: cn(
