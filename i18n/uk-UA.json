@@ -2195,6 +2195,10 @@
 			"noTasksFound": "Завдання не знайдено",
 			"linkFailed": "Не вдалося пов'язати завдання.",
 			"unlinkFailed": "Не вдалося видалити посилання."
+		},
+		"tree": {
+			"expand": "Expand child documents",
+			"collapse": "Collapse child documents"
 		}
 	}
 }

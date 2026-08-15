@@ -2181,6 +2181,10 @@
 			"noTasksFound": "작업을 찾을 수 없음",
 			"linkFailed": "태스크를 연결하지 못했습니다.",
 			"unlinkFailed": "참조를 해제하지 못했습니다."
+		},
+		"tree": {
+			"expand": "하위 문서 펼치기",
+			"collapse": "하위 문서 접기"
 		}
 	}
 }

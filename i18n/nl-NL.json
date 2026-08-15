@@ -2181,6 +2181,10 @@
 			"noTasksFound": "Geen taken gevonden",
 			"linkFailed": "Kon de taak niet koppelen.",
 			"unlinkFailed": "Kon de verwijzing niet verwijderen."
+		},
+		"tree": {
+			"expand": "Expand child documents",
+			"collapse": "Collapse child documents"
 		}
 	}
 }

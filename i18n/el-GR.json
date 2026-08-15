@@ -2181,6 +2181,10 @@
 			"noTasksFound": "Δεν βρέθηκαν εργασίες",
 			"linkFailed": "Δεν ήταν δυνατή η σύνδεση της εργασίας.",
 			"unlinkFailed": "Δεν ήταν δυνατή η αφαίρεση της αναφοράς."
+		},
+		"tree": {
+			"expand": "Expand child documents",
+			"collapse": "Collapse child documents"
 		}
 	}
 }

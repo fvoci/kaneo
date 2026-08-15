@@ -2181,6 +2181,10 @@
 			"noTasksFound": "Не се пронајдени задачи",
 			"linkFailed": "Задачата не можеше да се поврзе.",
 			"unlinkFailed": "Референцата не можеше да се отстрани."
+		},
+		"tree": {
+			"expand": "Expand child documents",
+			"collapse": "Collapse child documents"
 		}
 	}
 }

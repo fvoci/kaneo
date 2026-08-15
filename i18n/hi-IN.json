@@ -2181,6 +2181,10 @@
 			"noTasksFound": "कोई कार्य नहीं मिला",
 			"linkFailed": "कार्य लिंक नहीं किया जा सका।",
 			"unlinkFailed": "संदर्भ हटाया नहीं जा सका।"
+		},
+		"tree": {
+			"expand": "Expand child documents",
+			"collapse": "Collapse child documents"
 		}
 	}
 }

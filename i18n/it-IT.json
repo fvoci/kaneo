@@ -2181,6 +2181,10 @@
 			"noTasksFound": "Nessuna attività trovata",
 			"linkFailed": "Impossibile collegare l'attività.",
 			"unlinkFailed": "Impossibile rimuovere il riferimento."
+		},
+		"tree": {
+			"expand": "Expand child documents",
+			"collapse": "Collapse child documents"
 		}
 	}
 }

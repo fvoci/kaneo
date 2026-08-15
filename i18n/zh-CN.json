@@ -2181,6 +2181,10 @@
 			"noTasksFound": "未找到任务",
 			"linkFailed": "无法关联该任务。",
 			"unlinkFailed": "无法移除该引用。"
+		},
+		"tree": {
+			"expand": "Expand child documents",
+			"collapse": "Collapse child documents"
 		}
 	}
 }

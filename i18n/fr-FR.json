@@ -2181,6 +2181,10 @@
 			"noTasksFound": "Aucune tâche trouvée",
 			"linkFailed": "Impossible de lier la tâche.",
 			"unlinkFailed": "Impossible de supprimer la référence."
+		},
+		"tree": {
+			"expand": "Expand child documents",
+			"collapse": "Collapse child documents"
 		}
 	}
 }

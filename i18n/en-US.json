@@ -2181,6 +2181,10 @@
 			"noTasksFound": "No tasks found",
 			"linkFailed": "Could not link the task.",
 			"unlinkFailed": "Could not remove the reference."
+		},
+		"tree": {
+			"expand": "Expand child documents",
+			"collapse": "Collapse child documents"
 		}
 	}
 }

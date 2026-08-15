@@ -8601,6 +8601,19 @@
 						"linkFailed",
 						"unlinkFailed"
 					]
+				},
+				"tree": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"expand": {
+							"type": "string"
+						},
+						"collapse": {
+							"type": "string"
+						}
+					},
+					"required": ["expand", "collapse"]
 				}
 			},
 			"required": [
@@ -8624,7 +8637,8 @@
 				"sourceMode",
 				"mermaid",
 				"backlinks",
-				"references"
+				"references",
+				"tree"
 			]
 		}
 	},

@@ -2181,6 +2181,10 @@
 			"noTasksFound": "Không tìm thấy công việc nào",
 			"linkFailed": "Không thể liên kết công việc.",
 			"unlinkFailed": "Không thể gỡ tham chiếu."
+		},
+		"tree": {
+			"expand": "Expand child documents",
+			"collapse": "Collapse child documents"
 		}
 	}
 }

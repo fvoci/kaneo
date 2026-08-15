@@ -2251,6 +2251,10 @@
 			"noTasksFound": "Задачи не найдены",
 			"linkFailed": "Не удалось связать задачу.",
 			"unlinkFailed": "Не удалось удалить ссылку."
+		},
+		"tree": {
+			"expand": "Expand child documents",
+			"collapse": "Collapse child documents"
 		}
 	}
 }

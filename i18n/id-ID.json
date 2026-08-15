@@ -2181,6 +2181,10 @@
 			"noTasksFound": "Tugas tidak ditemukan",
 			"linkFailed": "Tidak dapat menautkan tugas.",
 			"unlinkFailed": "Tidak dapat menghapus referensi."
+		},
+		"tree": {
+			"expand": "Expand child documents",
+			"collapse": "Collapse child documents"
 		}
 	}
 }
