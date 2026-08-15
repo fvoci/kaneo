@@ -8461,17 +8461,13 @@
 						},
 						"deleteFailed": {
 							"type": "string"
-						},
-						"conflict": {
-							"type": "string"
 						}
 					},
 					"required": [
 						"loadFailed",
 						"createFailed",
 						"saveFailed",
-						"deleteFailed",
-						"conflict"
+						"deleteFailed"
 					]
 				},
 				"conflict": {

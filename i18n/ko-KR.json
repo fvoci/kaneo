@@ -1767,7 +1767,7 @@
 			}
 		},
 		"backlog": {
-			"pageTitle": "{{name}}님의 백로그",
+			"pageTitle": "{{name}}의 백로그",
 			"noTasksToMove": "이동할 계획된 작업이 없습니다",
 			"moveAllConfirm": "계획된 작업 {{count}}개를 모두 할 일로 이동하시겠습니까?",
 			"moveAllSuccess": "작업 {{count}}개를 할 일로 이동했습니다",
@@ -2145,8 +2145,7 @@
 			"loadFailed": "문서를 불러오지 못했습니다.",
 			"createFailed": "문서를 만들지 못했습니다.",
 			"saveFailed": "문서를 저장하지 못했습니다.",
-			"deleteFailed": "문서를 삭제하지 못했습니다.",
-			"conflict": "다른 사람이 먼저 저장했습니다. 새로고침하면 그 내용이 보이며, 저장하지 않은 수정은 사라집니다."
+			"deleteFailed": "문서를 삭제하지 못했습니다."
 		},
 		"conflict": {
 			"message": "다른 사람이 더 최신 버전을 저장했습니다 (서버 v{{currentVersion}}, 내 편집 기준 v{{myVersion}}). 수정 내용은 아직 남아 있으며, 최신 버전을 불러오면 덮어씁니다.",

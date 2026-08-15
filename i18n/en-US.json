@@ -2145,8 +2145,7 @@
 			"loadFailed": "Could not load documents.",
 			"createFailed": "Could not create the document.",
 			"saveFailed": "Could not save the document.",
-			"deleteFailed": "Could not delete the document.",
-			"conflict": "Someone else saved this document first. Reload to see their version — your unsaved edits will be lost."
+			"deleteFailed": "Could not delete the document."
 		},
 		"conflict": {
 			"message": "Someone saved a newer version (server v{{currentVersion}}, your edits are based on v{{myVersion}}). Your changes are still here — loading the latest version will replace them.",

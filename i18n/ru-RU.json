@@ -2203,7 +2203,6 @@
 			"title": "No documents yet"
 		},
 		"errors": {
-			"conflict": "Someone else saved this document first. Reload to see their version — your unsaved edits will be lost.",
 			"createFailed": "Could not create the document.",
 			"deleteFailed": "Could not delete the document.",
 			"loadFailed": "Could not load documents.",
