@@ -11,6 +11,7 @@
     "i18n:report:fix": "node ./scripts/i18n/report.mjs --fix",
     "i18n:schema": "node ./scripts/i18n/schema.mjs && biome format --write i18n/schema.json",
     "lint": "turbo lint",
+    "seed": "pnpm --filter @kaneo/api seed",
     "test": "turbo test",
     "test:integration": "turbo test:integration",
     "typecheck": "turbo typecheck",

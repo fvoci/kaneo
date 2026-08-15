@@ -28,6 +28,7 @@ import db, { getDatabase, schema } from "./database";
 import { prepareDatabaseStartup } from "./database/prepare-database-startup";
 import { waitForDatabase } from "./database/wait-for-database";
 import discordIntegration from "./discord-integration";
+import document from "./document";
 import { eventContext } from "./events";
 import externalLink from "./external-link";
 import genericWebhookIntegration from "./generic-webhook-integration";
@@ -632,6 +633,7 @@ export function createApp() {
     telegramIntegration,
   );
   const taskRelationApi = api.route("/task-relation", taskRelation);
+  const documentApi = api.route("/document", document);
   const externalLinkApi = api.route("/external-link", externalLink);
   const workflowRuleApi = api.route("/workflow-rule", workflowRule);
   const invitationApi = api.route("/invitation", invitation);
@@ -782,6 +784,7 @@ export function createApp() {
     commentApi,
     configApi,
     discordIntegrationApi,
+    documentApi,
     externalLinkApi,
     genericWebhookIntegrationApi,
     githubIntegrationApi,
@@ -900,6 +903,7 @@ const {
   commentApi,
   configApi,
   discordIntegrationApi,
+  documentApi,
   externalLinkApi,
   genericWebhookIntegrationApi,
   githubIntegrationApi,
@@ -953,6 +957,7 @@ export type AppType =
   | typeof slackIntegrationApi
   | typeof telegramIntegrationApi
   | typeof taskRelationApi
+  | typeof documentApi
   | typeof externalLinkApi
   | typeof workflowRuleApi
   | typeof invitationApi
